@@ -1,0 +1,49 @@
+### Variables
+@baseUrl = http://localhost:4000/api/v1
+@token = 
+
+### Health Check
+GET http://localhost:4000/health
+
+### Register User
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "alice@aura.com",
+  "password": "Password123",
+  "name": "Alice Johnson"
+}
+
+### Login User
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "alice@aura.com",
+  "password": "Password123"
+}
+
+### Get Current User (requires token)
+# First, copy the token from login/register response above
+# Then paste it in the @token variable at the top
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+
+### Test Validation - Weak Password (should fail)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "bob@aura.com",
+  "password": "weak"
+}
+
+### Test Validation - Invalid Email (should fail)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "notanemail",
+  "password": "Password123"
+}
