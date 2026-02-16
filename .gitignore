@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+backend/node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -9,6 +10,11 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+
+# Build outputs
+backend/dist/
+.next/
+out/
 
 # testing
 /coverage
@@ -49,7 +55,8 @@ CREDENTIALS.txt
 .env.development.local
 .env.test.local
 .env.production.local
-
+backend/.env
+backend/.env.local
 # Credentials file (our custom file)
 CREDENTIALS.txt
 
@@ -73,6 +80,7 @@ Thumbs.db
 logs/
 *.log
 npm-debug.log*
+backend/logs/
 yarn-debug.log*
 yarn-error.log*
 

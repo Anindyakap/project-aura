@@ -1,0 +1,175 @@
+# ============================================
+# PROJECT AURA - API TESTS
+# ============================================
+# How to use:
+# 1. Make sure backend server is running (npm run dev)
+# 2. Click "Send Request" above any request
+# 3. Response appears in a new panel on the right
+# 4. After login/register, copy the token and paste it in @token variable below
+# ============================================
+
+### Variables
+@baseUrl = http://localhost:4000/api/v1
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3ZjdmMmY4Ni0yMGVhLTRmYzItYmMzMS1lNWJhYWM4ZmJkMDMiLCJlbWFpbCI6ImFsaWNlQGF1cmEuY29tIiwiaWF0IjoxNzcxMjYwMzA4LCJleHAiOjE3NzE4NjUxMDh9.wDAXGuGLSfK4-OI8xlPIldCc0e11PtUDc2pNDr0rfRI
+
+# ============================================
+# HEALTH & INFO
+# ============================================
+
+### Health Check
+GET http://localhost:4000/health
+
+### API Info
+GET {{baseUrl}}
+
+# ============================================
+# AUTHENTICATION
+# ============================================
+
+### 1. Register New User - Alice
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "alice@aura.com",
+  "password": "Password123",
+  "name": "Alice Johnson"
+}
+
+### 2. Register Another User - Bob
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "bob@aura.com",
+  "password": "SecurePass456",
+  "name": "Bob Smith"
+}
+
+### 3. Login - Alice
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "alice@aura.com",
+  "password": "Password123"
+}
+
+### 4. Login - Bob
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "bob@aura.com",
+  "password": "SecurePass456"
+}
+
+### 5. Get Current User Profile (Protected Route)
+# ⚠️ IMPORTANT: First run login above, copy the token from response
+# Then replace YOUR_TOKEN_HERE at the top with your actual token
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+
+# ============================================
+# VALIDATION TESTS (Should Fail)
+# ============================================
+
+### Test: Duplicate Email (should fail)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "alice@aura.com",
+  "password": "Password123",
+  "name": "Alice Clone"
+}
+
+### Test: Weak Password - Too Short (should fail)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "test1@aura.com",
+  "password": "weak"
+}
+
+### Test: Weak Password - No Uppercase (should fail)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "test2@aura.com",
+  "password": "password123"
+}
+
+### Test: Weak Password - No Number (should fail)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "test3@aura.com",
+  "password": "PasswordABC"
+}
+
+### Test: Invalid Email Format (should fail)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "notanemail",
+  "password": "Password123"
+}
+
+### Test: Missing Email (should fail)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "password": "Password123",
+  "name": "Test User"
+}
+
+### Test: Wrong Password on Login (should fail)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "alice@aura.com",
+  "password": "WrongPassword123"
+}
+
+### Test: Non-existent User Login (should fail)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "nonexistent@aura.com",
+  "password": "Password123"
+}
+
+### Test: Protected Route Without Token (should fail)
+GET {{baseUrl}}/auth/me
+
+### Test: Protected Route With Invalid Token (should fail)
+GET {{baseUrl}}/auth/me
+Authorization: Bearer invalid_token_here
+
+# ============================================
+# FUTURE ENDPOINTS (Coming Soon)
+# ============================================
+
+### Get Brands (Future)
+# GET {{baseUrl}}/brands
+# Authorization: Bearer {{token}}
+
+### Get Integrations (Future)
+# GET {{baseUrl}}/integrations
+# Authorization: Bearer {{token}}
+
+### Get Metrics (Future)
+# GET {{baseUrl}}/metrics
+# Authorization: Bearer {{token}}
+
+### Get Insights (Future)
+# GET {{baseUrl}}/insights
+# Authorization: Bearer {{token}}
