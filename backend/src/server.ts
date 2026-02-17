@@ -15,7 +15,7 @@ dotenv.config();
 
 // Create Express app
 const app: Application = express();
-const PORT = process.env.PORT || 4000;
+const PORT = parseInt(process.env.PORT || '4000', 10);
 const API_VERSION = process.env.API_VERSION || 'v1';
 
 // ============================================
@@ -116,20 +116,22 @@ const startServer = async () => {
     await testConnection();
     
     // Start Express server
-    app.listen(PORT, () => {
-      console.log('╔════════════════════════════════════════╗');
-      console.log('║  🚀 Aura Backend API Server Running   ║');
-      console.log('╠════════════════════════════════════════╣');
-      console.log(`║  Environment: ${(process.env.NODE_ENV || 'development').padEnd(24)} ║`);
-      console.log(`║  Port: ${PORT.toString().padEnd(31)} ║`);
-      console.log(`║  API Version: ${API_VERSION.padEnd(24)} ║`);
-      console.log(`║  URL: http://localhost:${PORT.toString().padEnd(18)} ║`);
-      console.log('╠════════════════════════════════════════╣');
-      console.log('║  📚 Endpoints:                         ║');
-      console.log(`║    - GET  /health                      ║`);
-      console.log(`║    - GET  /api/${API_VERSION.padEnd(24)}  ║`);
-      console.log('╚════════════════════════════════════════╝');
-    });
+    // Start Express server
+app.listen(PORT, '0.0.0.0', () => {
+  console.log('╔════════════════════════════════════════╗');
+  console.log('║  🚀 Aura Backend API Server Running   ║');
+  console.log('╠════════════════════════════════════════╣');
+  console.log(`║  Environment: ${(process.env.NODE_ENV || 'development').padEnd(24)} ║`);
+  console.log(`║  Port: ${PORT.toString().padEnd(31)} ║`);
+  console.log(`║  API Version: ${(process.env.API_VERSION || 'v1').padEnd(24)} ║`);
+  console.log(`║  URL: http://localhost:${PORT.toString().padEnd(18)} ║`);
+  console.log('╠════════════════════════════════════════╣');
+  console.log('║  📚 Endpoints:                         ║');
+  console.log(`║    - GET  /health                      ║`);
+  console.log(`║    - GET  /api/v1                      ║`);
+  console.log('╚════════════════════════════════════════╝');
+});
+
   } catch (error) {
     console.error('❌ Failed to start server:', error);
     process.exit(1);
