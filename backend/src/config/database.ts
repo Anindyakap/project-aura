@@ -16,30 +16,41 @@ if (!process.env.DATABASE_URL) {
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
-    rejectUnauthorized: false, // Required for Supabase
+    rejectUnauthorized: false,
   },
-  max: 20, // Maximum number of clients in the pool
-  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-  connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection cannot be established
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000,
 });
 
-// Test database connection
+// Test database connection with retry logic
 export const testConnection = async (): Promise<void> => {
-  try {
-    const client = await pool.connect();
-    const result = await client.query('SELECT NOW()');
-    console.log('✅ Database connected successfully at:', result.rows[0].now);
-    client.release();
-  } catch (error) {
-    console.error('❌ Database connection error:', error);
-    throw error;
+  let retries = 3;
+
+  while (retries > 0) {
+    try {
+      const client = await pool.connect();
+      const result = await client.query('SELECT NOW()');
+      console.log('✅ Database connected successfully at:', result.rows[0].now);
+      client.release();
+      return;
+    } catch (error) {
+      retries--;
+      console.error(`❌ Database connection error (attempt ${3 - retries}/3):`, error);
+
+      if (retries === 0) {
+        throw error;
+      }
+
+      console.log(`⏳ Retrying in 2 seconds... (${retries} attempts left)`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
   }
 };
 
-// Handle pool errors
+// Handle pool errors gracefully
 pool.on('error', (err) => {
   console.error('Unexpected database pool error:', err);
-  process.exit(-1);
 });
 
 // Graceful shutdown
