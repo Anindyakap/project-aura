@@ -2,7 +2,7 @@
 // Authentication controller (register, login, me)
 
 import { Request, Response, NextFunction } from 'express';
-import { pool } from '../config/database';
+import { pool, getConnection } from '../config/database';
 import { hashPassword, comparePassword, generateToken } from '../utils/auth';
 import { AppError } from '../middleware/errorHandler';
 import { User, excludePassword, AuthResponse } from '../types/user.types';
