@@ -19,6 +19,9 @@
 ### Health Check
 GET http://localhost:4000/health
 
+GET https://aura-backend-ks8e.onrender.com/health
+
+
 ### API Info
 GET {{baseUrl}}
 
@@ -154,6 +157,18 @@ GET {{baseUrl}}/auth/me
 GET {{baseUrl}}/auth/me
 Authorization: Bearer invalid_token_here
 
+### Production Health Check
+GET https://aura-backend-ks8e.onrender.com/health
+
+### Production Register
+POST https://aura-backend-ks8e.onrender.com/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "email": "prod@aura.com",
+  "password": "Password123",
+  "name": "Production User"
+}
 # ============================================
 # FUTURE ENDPOINTS (Coming Soon)
 # ============================================

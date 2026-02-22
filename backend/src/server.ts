@@ -41,27 +41,18 @@ app.get('/', (_req: Request, res: Response) => {
 });
 
 app.get('/health', async (_req: Request, res: Response) => {
-  // Test DB connection on health check
-  try {
-    const client = await pool.connect();
-    await client.query('SELECT NOW()');
-    client.release();
-    res.status(200).json({
-      status: 'ok',
-      message: 'Aura Backend API is running',
-      database: 'connected',
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || 'development',
-    });
-  } catch (error) {
-    res.status(200).json({
-      status: 'ok',
-      message: 'Aura Backend API is running',
-      database: 'disconnected',
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || 'development',
-    });
-  }
+  // Import at top if not already there
+  const { healthCheck } = await import('./config/database');
+  
+  const dbConnected = await healthCheck();
+  
+  res.status(200).json({
+    status: 'ok',
+    message: 'Aura Backend API is running',
+    database: dbConnected ? 'connected' : 'disconnected',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+  });
 });
 
 app.get(`/api/${API_VERSION}`, (_req: Request, res: Response) => {
