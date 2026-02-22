@@ -8,6 +8,7 @@ const getAllowedOrigins = (): string[] => {
   const origins = [
     'http://localhost:3000', // Next.js local dev
     'http://localhost:3001', // Alternative local port
+    'https://project-aura-gamma.vercel.app', // Production frontend URL
   ];
 
   // Add production frontend URL if set
