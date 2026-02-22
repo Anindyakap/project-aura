@@ -1,93 +1,113 @@
 // app/dashboard/page.tsx
 'use client';
 
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
+import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { TrendingUp, DollarSign, MousePointerClick, Users } from 'lucide-react';
 
 export default function DashboardPage() {
-  const { user, logout } = useAuth();
-
-  // If no user, show loading
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
-      </div>
-    );
-  }
+  // Mock data (we'll replace with real data later)
+  const stats = [
+    {
+      title: 'Revenue',
+      value: '$12,345',
+      change: '+20.1%',
+      icon: DollarSign,
+      color: 'text-green-600',
+      bgColor: 'bg-green-100',
+    },
+    {
+      title: 'ROAS',
+      value: '3.2x',
+      change: '+12.5%',
+      icon: TrendingUp,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-100',
+    },
+    {
+      title: 'Conversions',
+      value: '273',
+      change: '+8.2%',
+      icon: MousePointerClick,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-100',
+    },
+    {
+      title: 'New Customers',
+      value: '145',
+      change: '+15.3%',
+      icon: Users,
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-100',
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      {/* Header */}
-      <header className="bg-white shadow-sm rounded-lg p-6 mb-8">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold gradient-text">
-              Welcome to Aura
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Hello, {user.name || user.email}! 👋
-            </p>
-          </div>
-          <Button onClick={logout} variant="outline">
-            Logout
-          </Button>
-        </div>
-      </header>
-
-      {/* Dashboard Content */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {/* Card 1 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Revenue</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">$12,345</p>
-            <p className="text-sm text-gray-500 mt-2">+20% from last month</p>
-          </CardContent>
-        </Card>
-
-        {/* Card 2 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>ROAS</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">3.2x</p>
-            <p className="text-sm text-gray-500 mt-2">Return on ad spend</p>
-          </CardContent>
-        </Card>
-
-        {/* Card 3 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>CPA</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">$45.23</p>
-            <p className="text-sm text-gray-500 mt-2">Cost per acquisition</p>
-          </CardContent>
-        </Card>
+    <DashboardLayout>
+      {/* Stats Grid */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+        {stats.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <Card key={stat.title} className="card-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-sm font-medium text-gray-600">{stat.title}</p>
+                  <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+                    <Icon className={`h-5 w-5 ${stat.color}`} />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                  <p className="text-sm text-green-600 font-medium">{stat.change} from last month</p>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Coming Soon Section */}
-      <Card className="mt-8">
+      <Card className="card-shadow">
         <CardHeader>
-          <CardTitle>🚀 Coming Soon</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <span className="text-2xl">🚀</span>
+            What's Next
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <ul className="space-y-2 text-gray-600">
-            <li>✅ Authentication System (Complete!)</li>
-            <li>⏳ Connect Shopify Integration</li>
-            <li>⏳ Connect Meta Ads</li>
-            <li>⏳ Connect Google Ads</li>
-            <li>⏳ Real-time Metrics & Charts</li>
-            <li>⏳ AI-powered Insights</li>
-          </ul>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+              <span className="text-xl">✅</span>
+              <div>
+                <p className="font-medium text-gray-900">Authentication System</p>
+                <p className="text-sm text-gray-600">Complete with login, register, and protected routes</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <span className="text-xl">⏳</span>
+              <div>
+                <p className="font-medium text-gray-900">Platform Integrations</p>
+                <p className="text-sm text-gray-600">Connect Shopify, Meta Ads, and Google Ads</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <span className="text-xl">⏳</span>
+              <div>
+                <p className="font-medium text-gray-900">Real-time Analytics</p>
+                <p className="text-sm text-gray-600">Live charts and performance metrics</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <span className="text-xl">⏳</span>
+              <div>
+                <p className="font-medium text-gray-900">AI-Powered Insights</p>
+                <p className="text-sm text-gray-600">Automated recommendations and alerts</p>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
-    </div>
+    </DashboardLayout>
   );
 }
