@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Link2, CheckCircle2, AlertCircle, ArrowRight,
-  Loader2, RefreshCw, Unplug, Plus
+  Loader2, Unplug, Plus
 } from 'lucide-react';
 import {
   getBrands, createBrand, getShopifyStatus,
@@ -19,43 +19,57 @@ import {
 } from '@/lib/api';
 import { useSearchParams } from 'next/navigation';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// This tiny component is the ONLY part that uses useSearchParams.
+// Isolating it here is what makes the Suspense boundary work correctly.
+// Think of it like a small helper function that reads the URL query string.
+// ─────────────────────────────────────────────────────────────────────────────
+function ShopifyResultHandler({
+  onResult,
+}: {
+  onResult: (type: 'success' | 'error', message: string) => void;
+}) {
+  const searchParams = useSearchParams();
 
+  useEffect(() => {
+    const shopifyResult = searchParams.get('shopify');
+    if (shopifyResult === 'connected') {
+      onResult('success', '🎉 Shopify connected successfully!');
+    } else if (shopifyResult === 'error') {
+      const reason = searchParams.get('reason') || 'unknown';
+      onResult('error', `Failed to connect Shopify: ${reason}`);
+    }
+  }, []);  // runs once when component mounts
+
+  return null; // this component renders nothing — it just reads the URL
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main page component — no useSearchParams here, so no Suspense issues
+// ─────────────────────────────────────────────────────────────────────────────
 function IntegrationsContent() {
   // ── State ──────────────────────────────────────────────────────────────────
-  const [brands, setBrands] = useState<Brand[]>([]);           // list of user's brands
-  const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null); // active brand
-  const [shopifyStatus, setShopifyStatus] = useState<{         // shopify connection status
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
+  const [shopifyStatus, setShopifyStatus] = useState<{
     connected: boolean;
     integration?: any;
   } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);            // page loading
-  const [isConnecting, setIsConnecting] = useState(false);     // shopify connect button
-  const [shopInput, setShopInput] = useState('');              // shop URL input
-  const [showShopInput, setShowShopInput] = useState(false);   // show/hide input
-  const [newBrandName, setNewBrandName] = useState('');        // new brand name input
-  const [showBrandForm, setShowBrandForm] = useState(false);   // show/hide brand form
-  const [notification, setNotification] = useState<{          // success/error banner
+  const [isLoading, setIsLoading] = useState(true);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [shopInput, setShopInput] = useState('');
+  const [showShopInput, setShowShopInput] = useState(false);
+  const [newBrandName, setNewBrandName] = useState('');
+  const [showBrandForm, setShowBrandForm] = useState(false);
+  const [notification, setNotification] = useState<{
     type: 'success' | 'error'; message: string
   } | null>(null);
-
-  // Read ?shopify=connected or ?shopify=error from URL after OAuth redirect
-  const searchParams = useSearchParams();
 
   // ── On page load ───────────────────────────────────────────────────────────
   useEffect(() => {
     loadBrands();
-
-    // Check if Shopify just redirected back with a result
-    const shopifyResult = searchParams.get('shopify');
-    if (shopifyResult === 'connected') {
-      showNotification('success', '🎉 Shopify connected successfully!');
-    } else if (shopifyResult === 'error') {
-      const reason = searchParams.get('reason') || 'unknown';
-      showNotification('error', `Failed to connect Shopify: ${reason}`);
-    }
   }, []);
 
-  // When selected brand changes, fetch its Shopify status
   useEffect(() => {
     if (selectedBrand) {
       loadShopifyStatus(selectedBrand.id);
@@ -64,19 +78,16 @@ function IntegrationsContent() {
 
   // ── Helper functions ───────────────────────────────────────────────────────
 
-  // Show a notification banner for 4 seconds then hide it
   const showNotification = (type: 'success' | 'error', message: string) => {
     setNotification({ type, message });
     setTimeout(() => setNotification(null), 4000);
   };
 
-  // Fetch all brands from backend
   const loadBrands = async () => {
     try {
       setIsLoading(true);
       const data = await getBrands();
       setBrands(data);
-      // Auto-select first brand if only one exists
       if (data.length === 1) setSelectedBrand(data[0]);
     } catch (error: any) {
       showNotification('error', 'Failed to load brands');
@@ -85,7 +96,6 @@ function IntegrationsContent() {
     }
   };
 
-  // Fetch Shopify connection status for a brand
   const loadShopifyStatus = async (brandId: string) => {
     try {
       const status = await getShopifyStatus(brandId);
@@ -95,7 +105,6 @@ function IntegrationsContent() {
     }
   };
 
-  // Create a new brand
   const handleCreateBrand = async () => {
     if (!newBrandName.trim()) return;
     try {
@@ -110,29 +119,22 @@ function IntegrationsContent() {
     }
   };
 
-  // Connect Shopify — redirects browser to Shopify OAuth
   const handleConnectShopify = () => {
     if (!selectedBrand) return;
 
-    // Clean up shop input: remove https://, trailing slashes etc.
     let shop = shopInput.trim().toLowerCase();
     shop = shop.replace('https://', '').replace('http://', '').replace(/\/$/, '');
 
-    // Validate format
     if (!shop.endsWith('.myshopify.com')) {
       showNotification('error', 'Shop URL must end with .myshopify.com');
       return;
     }
 
     setIsConnecting(true);
-
-    // Build the backend OAuth URL and redirect the browser there
-    // The backend will redirect to Shopify, Shopify will redirect back to our callback
     const connectUrl = getShopifyConnectUrl(shop, selectedBrand.id);
-    window.location.href = connectUrl; // full page redirect to start OAuth
+    window.location.href = connectUrl;
   };
 
-  // Disconnect Shopify
   const handleDisconnectShopify = async () => {
     if (!selectedBrand) return;
     try {
@@ -157,6 +159,12 @@ function IntegrationsContent() {
 
   return (
     <DashboardLayout>
+      {/* ShopifyResultHandler reads ?shopify= from URL and calls showNotification */}
+      {/* It renders nothing visually — just handles the redirect result */}
+      <Suspense fallback={null}>
+        <ShopifyResultHandler onResult={showNotification} />
+      </Suspense>
+
       {/* Notification Banner */}
       {notification && (
         <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
@@ -186,7 +194,6 @@ function IntegrationsContent() {
         </CardHeader>
         <CardContent>
           {brands.length === 0 ? (
-            /* No brands yet — show create form */
             <div className="text-center py-4">
               <p className="text-gray-500 mb-4">No brands yet. Create your first brand to get started.</p>
               <Button onClick={() => setShowBrandForm(true)}>
@@ -194,7 +201,6 @@ function IntegrationsContent() {
               </Button>
             </div>
           ) : (
-            /* Brand list as clickable cards */
             <div className="flex flex-wrap gap-3">
               {brands.map(brand => (
                 <button
@@ -218,7 +224,6 @@ function IntegrationsContent() {
             </div>
           )}
 
-          {/* Create Brand Form */}
           {showBrandForm && (
             <div className="mt-4 p-4 bg-gray-50 rounded-lg flex gap-3">
               <Input
@@ -234,11 +239,11 @@ function IntegrationsContent() {
         </CardContent>
       </Card>
 
-      {/* Integrations Grid — only show if a brand is selected */}
+      {/* Integrations Grid */}
       {selectedBrand ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 
-          {/* ── Shopify Card ── */}
+          {/* Shopify Card */}
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex items-start justify-between mb-4">
@@ -249,18 +254,16 @@ function IntegrationsContent() {
                   variant={shopifyStatus?.connected ? 'default' : 'secondary'}
                   className="flex items-center gap-1"
                 >
-                  {shopifyStatus?.connected ? (
-                    <><CheckCircle2 className="h-3 w-3" /> Connected</>
-                  ) : (
-                    <><AlertCircle className="h-3 w-3" /> Not Connected</>
-                  )}
+                  {shopifyStatus?.connected
+                    ? <><CheckCircle2 className="h-3 w-3" /> Connected</>
+                    : <><AlertCircle className="h-3 w-3" /> Not Connected</>
+                  }
                 </Badge>
               </div>
               <CardTitle className="text-xl">Shopify</CardTitle>
               <CardDescription>Connect your store to track sales and orders</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Features list */}
               <ul className="space-y-1">
                 {['Sales data', 'Order tracking', 'Product analytics'].map(f => (
                   <li key={f} className="text-sm text-gray-600 flex items-center gap-2">
@@ -269,7 +272,6 @@ function IntegrationsContent() {
                 ))}
               </ul>
 
-              {/* Connected state: show store info */}
               {shopifyStatus?.connected && shopifyStatus.integration && (
                 <div className="p-3 bg-green-50 rounded-lg text-sm">
                   <p className="font-medium text-green-800">
@@ -281,7 +283,6 @@ function IntegrationsContent() {
                 </div>
               )}
 
-              {/* Shop URL input — shown when user clicks Connect */}
               {showShopInput && !shopifyStatus?.connected && (
                 <div className="space-y-2">
                   <Label className="text-sm">Your Shopify store URL</Label>
@@ -293,9 +294,7 @@ function IntegrationsContent() {
                 </div>
               )}
 
-              {/* Action buttons */}
               {shopifyStatus?.connected ? (
-                /* Already connected: show disconnect button */
                 <Button
                   variant="outline"
                   className="w-full text-red-600 border-red-200 hover:bg-red-50"
@@ -304,7 +303,6 @@ function IntegrationsContent() {
                   <Unplug className="h-4 w-4 mr-2" /> Disconnect
                 </Button>
               ) : showShopInput ? (
-                /* Input visible: show Connect + Cancel */
                 <div className="flex gap-2">
                   <Button
                     className="flex-1"
@@ -321,7 +319,6 @@ function IntegrationsContent() {
                   </Button>
                 </div>
               ) : (
-                /* Default: show Connect Shopify button */
                 <Button className="w-full" onClick={() => setShowShopInput(true)}>
                   Connect Shopify <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -329,7 +326,7 @@ function IntegrationsContent() {
             </CardContent>
           </Card>
 
-          {/* ── Meta Ads Card (Coming Soon) ── */}
+          {/* Meta Ads Card */}
           <Card className="hover:shadow-lg transition-shadow opacity-75">
             <CardHeader>
               <div className="flex items-start justify-between mb-4">
@@ -355,7 +352,7 @@ function IntegrationsContent() {
             </CardContent>
           </Card>
 
-          {/* ── Google Ads Card (Coming Soon) ── */}
+          {/* Google Ads Card */}
           <Card className="hover:shadow-lg transition-shadow opacity-75">
             <CardHeader>
               <div className="flex items-start justify-between mb-4">
@@ -383,7 +380,6 @@ function IntegrationsContent() {
 
         </div>
       ) : (
-        /* No brand selected yet */
         <Card className="bg-blue-50 border-blue-200">
           <CardContent className="p-6 flex items-start gap-4">
             <div className="p-2 bg-blue-100 rounded-lg">
@@ -402,9 +398,16 @@ function IntegrationsContent() {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Default export — wraps everything in Suspense for Next.js build compatibility
+// ─────────────────────────────────────────────────────────────────────────────
 export default function IntegrationsPage() {
   return (
-    <Suspense fallback={<Loader2 className="h-8 w-8 animate-spin text-blue-600" />}>
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    }>
       <IntegrationsContent />
     </Suspense>
   );
