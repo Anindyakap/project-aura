@@ -10,7 +10,7 @@
 
 ### Variables
 @baseUrl = http://localhost:4000/api/v1
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3ZjdmMmY4Ni0yMGVhLTRmYzItYmMzMS1lNWJhYWM4ZmJkMDMiLCJlbWFpbCI6ImFsaWNlQGF1cmEuY29tIiwiaWF0IjoxNzcxMjYwMzA4LCJleHAiOjE3NzE4NjUxMDh9.wDAXGuGLSfK4-OI8xlPIldCc0e11PtUDc2pNDr0rfRI
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3ZjdmMmY4Ni0yMGVhLTRmYzItYmMzMS1lNWJhYWM4ZmJkMDMiLCJlbWFpbCI6ImFsaWNlQGF1cmEuY29tIiwiaWF0IjoxNzcxOTM0NTQzLCJleHAiOjE3NzI1MzkzNDN9.imVbvVLziYs_VnRGAPTRmDgEy2zGJ3n8nRVQEZDguIo
 
 # ============================================
 # HEALTH & INFO
@@ -67,6 +67,10 @@ Content-Type: application/json
   "password": "SecurePass456"
 }
 
+### Check Shopify status (paste token from login response above)
+GET http://localhost:4000/api/v1/integrations/shopify/status?brandId=3fd72235-ee40-4484-8020-280938c5e1fd
+Authorization: Bearer {{token}}
+}
 ### 5. Get Current User Profile (Protected Route)
 # ⚠️ IMPORTANT: First run login above, copy the token from response
 # Then replace YOUR_TOKEN_HERE at the top with your actual token
