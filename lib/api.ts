@@ -158,3 +158,98 @@ export const logoutUser = (): void => {
 export const isAuthenticated = (): boolean => {
   return !!getToken();
 };
+
+// ============================================
+// BRANDS API CALLS
+// ============================================
+
+// Brand type definition
+export interface Brand {
+  id: string;
+  name: string;
+  domain: string | null;
+  currency: string;
+  timezone: string;
+  created_at: string;
+}
+
+// Get all brands for logged-in user
+export const getBrands = async (): Promise<Brand[]> => {
+  const response = await apiFetch('/brands');
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to fetch brands');
+  }
+
+  return data.data; // returns Brand[]
+};
+
+// Create a new brand
+export const createBrand = async (
+  name: string,
+  domain?: string
+): Promise<Brand> => {
+  const response = await apiFetch('/brands', {
+    method: 'POST',
+    body: JSON.stringify({ name, domain }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to create brand');
+  }
+
+  return data.data;
+};
+
+// ============================================
+// SHOPIFY API CALLS
+// ============================================
+
+// Check if Shopify is connected for a brand
+export const getShopifyStatus = async (brandId: string): Promise<{
+  connected: boolean;
+  integration?: {
+    platform_account_id: string;    // the shop domain e.g. mystore.myshopify.com
+    platform_account_name: string;  // the store name e.g. "My Store"
+    status: string;
+    last_sync_at: string | null;
+  };
+}> => {
+  const response = await apiFetch(`/integrations/shopify/status?brandId=${brandId}`);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to fetch Shopify status');
+  }
+
+  return data.data;
+};
+
+// Get the Shopify connect URL (redirects to Shopify OAuth)
+// We build this URL and redirect the browser to it
+export const getShopifyConnectUrl = (
+  shop: string,    // e.g. mystore.myshopify.com
+  brandId: string
+): string => {
+  const token = getToken();
+  // We pass the token as a query param because this is a browser redirect
+  // The backend will read it before redirecting to Shopify
+  return `${API_URL}/integrations/shopify/connect?shop=${shop}&brandId=${brandId}&token=${token}`;
+};
+
+// Disconnect Shopify
+export const disconnectShopify = async (brandId: string): Promise<void> => {
+  const response = await apiFetch('/integrations/shopify/disconnect', {
+    method: 'DELETE',
+    body: JSON.stringify({ brandId }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to disconnect Shopify');
+  }
+};
