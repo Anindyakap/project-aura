@@ -1,7 +1,7 @@
 // app/dashboard/integrations/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,8 @@ import {
 } from '@/lib/api';
 import { useSearchParams } from 'next/navigation';
 
-export default function IntegrationsPage() {
+
+function IntegrationsContent() {
   // ── State ──────────────────────────────────────────────────────────────────
   const [brands, setBrands] = useState<Brand[]>([]);           // list of user's brands
   const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null); // active brand
@@ -398,5 +399,13 @@ export default function IntegrationsPage() {
         </Card>
       )}
     </DashboardLayout>
+  );
+}
+
+export default function IntegrationsPage() {
+  return (
+    <Suspense fallback={<Loader2 className="h-8 w-8 animate-spin text-blue-600" />}>
+      <IntegrationsContent />
+    </Suspense>
   );
 }
