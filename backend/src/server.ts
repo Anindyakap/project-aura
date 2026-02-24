@@ -9,6 +9,7 @@ import { requestLogger } from './middleware/logger';
 import authRoutes from './routes/auth.routes';
 import cookieParser from 'cookie-parser';
 import shopifyRoutes from './routes/shopify.routes';
+import brandsRoutes from './routes/brands.routes';
 
 dotenv.config();
 
@@ -78,6 +79,7 @@ app.get(`/api/${API_VERSION}`, (_req: Request, res: Response) => {
 // ============================================
 app.use(`/api/${API_VERSION}/auth`, authRoutes);
 app.use(`/api/${API_VERSION}/integrations/shopify`, shopifyRoutes);
+app.use(`/api/${API_VERSION}/brands`, brandsRoutes);
 
 
 // ============================================
