@@ -158,7 +158,7 @@ export const shopifyCallback = async (
 
     // 7. Redirect back to frontend with success
     res.redirect(
-      `${FRONTEND_URL}/dashboard?shopify=connected&shop=${encodeURIComponent(shop)}`
+      `${FRONTEND_URL}/dashboard/integrations?shopify=connected&shop=${encodeURIComponent(shop)}`
     );
   } catch (error: any) {
     console.error('❌ Shopify OAuth error:', error.message);
