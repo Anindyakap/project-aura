@@ -7,6 +7,8 @@ import { corsOptions } from './config/cors';
 import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/logger';
 import authRoutes from './routes/auth.routes';
+import cookieParser from 'cookie-parser';
+import shopifyRoutes from './routes/shopify.routes';
 
 dotenv.config();
 
@@ -21,6 +23,7 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(requestLogger);
+app.use(cookieParser());
 
 // Security headers
 app.use((_req, res, next) => {
@@ -74,6 +77,8 @@ app.get(`/api/${API_VERSION}`, (_req: Request, res: Response) => {
 // API ROUTES
 // ============================================
 app.use(`/api/${API_VERSION}/auth`, authRoutes);
+app.use(`/api/${API_VERSION}/integrations/shopify`, shopifyRoutes);
+
 
 // ============================================
 // ERROR HANDLING
