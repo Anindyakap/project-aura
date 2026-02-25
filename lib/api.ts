@@ -253,3 +253,52 @@ export const disconnectShopify = async (brandId: string): Promise<void> => {
     throw new Error(data.message || 'Failed to disconnect Shopify');
   }
 };
+
+// ============================================
+// METRICS API CALLS
+// ============================================
+
+export interface MetricValue {
+  value: number;
+  change: number;      // % change vs previous period, e.g. 12.5 = +12.5%
+  formatted: string;   // ready-to-display string e.g. "$34,221.01"
+}
+
+export interface MetricsSummary {
+  period: string;
+  metrics: {
+    revenue:       MetricValue;
+    orders:        MetricValue;
+    aov:           MetricValue;
+    new_customers: MetricValue;
+  };
+}
+
+export interface ChartPoint {
+  date: string;   // "2026-02-25"
+  value: number;  // e.g. 1231.16
+}
+
+// Fetch KPI summary (revenue, orders, AOV, new customers)
+export const getMetricsSummary = async (
+  brandId: string
+): Promise<MetricsSummary> => {
+  const response = await apiFetch(`/metrics/summary?brandId=${brandId}`);
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to fetch metrics');
+  return data.data;
+};
+
+// Fetch daily data points for charts
+export const getMetricsChart = async (
+  brandId: string,
+  metric: 'revenue' | 'orders' | 'new_customers' = 'revenue',
+  days: number = 30
+): Promise<ChartPoint[]> => {
+  const response = await apiFetch(
+    `/metrics/chart?brandId=${brandId}&metric=${metric}&days=${days}`
+  );
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to fetch chart data');
+  return data.data.points;
+};
