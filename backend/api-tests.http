@@ -68,9 +68,9 @@ Content-Type: application/json
 }
 
 ### Check Shopify status (paste token from login response above)
-GET http://localhost:4000/api/v1/integrations/shopify/status?brandId=3fd72235-ee40-4484-8020-280938c5e1fd
+GET http://localhost:4000/api/v1/integrations/shopify/status?brandId=1c8b2004-e667-48a6-b717-cb93de9f1708
 Authorization: Bearer {{token}}
-}
+
 ### 5. Get Current User Profile (Protected Route)
 # ⚠️ IMPORTANT: First run login above, copy the token from response
 # Then replace YOUR_TOKEN_HERE at the top with your actual token
@@ -176,6 +176,10 @@ Content-Type: application/json
 # ============================================
 # FUTURE ENDPOINTS (Coming Soon)
 # ============================================
+
+### Trigger manual Shopify sync
+POST http://localhost:4000/api/v1/sync/shopify
+Authorization: Bearer {{token}}
 
 ### Get Brands (Future)
 # GET {{baseUrl}}/brands

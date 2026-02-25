@@ -10,6 +10,10 @@ import authRoutes from './routes/auth.routes';
 import cookieParser from 'cookie-parser';
 import shopifyRoutes from './routes/shopify.routes';
 import brandsRoutes from './routes/brands.routes';
+import { registerSyncJobs } from './jobs/sync.jobs';
+import syncRoutes from './routes/sync.routes';
+import metricsRoutes from './routes/metrics.routes';
+
 
 dotenv.config();
 
@@ -80,6 +84,8 @@ app.get(`/api/${API_VERSION}`, (_req: Request, res: Response) => {
 app.use(`/api/${API_VERSION}/auth`, authRoutes);
 app.use(`/api/${API_VERSION}/integrations/shopify`, shopifyRoutes);
 app.use(`/api/${API_VERSION}/brands`, brandsRoutes);
+app.use(`/api/${API_VERSION}/sync`, syncRoutes);
+app.use(`/api/${API_VERSION}/metrics`, metricsRoutes);
 
 
 // ============================================
@@ -106,6 +112,9 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`║  Port: ${PORT.toString().padEnd(31)} ║`);
   console.log(`║  API Version: ${(API_VERSION).padEnd(24)} ║`);
   console.log('╚════════════════════════════════════════╝');
+  
+  // Register scheduled jobs (e.g., daily sync)
+  registerSyncJobs();
 
   // Connect to DB after server starts
   connectDatabase();
