@@ -12,7 +12,7 @@ const REDIRECT_URI = process.env.SHOPIFY_REDIRECT_URI!;
 const FRONTEND_URL = process.env.FRONTEND_URL!;
 
 // Permissions we need from the merchant's Shopify store
-const SCOPES = 'read_orders,read_products,read_analytics';
+const SCOPES = 'read_orders,read_products,read_analytics,read_all_orders';
 
 // ─── CONNECT ─────────────────────────────────────────────────────────────────
 // GET /api/v1/integrations/shopify/connect?shop=xxx.myshopify.com&brandId=xxx
@@ -119,7 +119,7 @@ export const shopifyCallback = async (
 
     // 5. Fetch basic shop info to confirm token works
     const shopRes = await axios.get(
-      `https://${shop}/admin/api/2024-01/shop.json`,
+      `https://${shop}/admin/api/2026-01/shop.json`,
       { headers: { 'X-Shopify-Access-Token': accessToken } }
     );
     const shopData = shopRes.data.shop;
