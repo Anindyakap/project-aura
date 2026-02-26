@@ -170,7 +170,8 @@ export default function DashboardPage() {
               className={`px-4 py-2 rounded-lg text-sm font-medium border-2 transition-all ${
                 selectedBrand?.id === brand.id
                   ? 'border-blue-500 bg-blue-50 text-blue-700'
-                  : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                  : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'
+
               }`}
             >
               {brand.name}
@@ -348,7 +349,8 @@ export default function DashboardPage() {
       {/* ── Quick Stats Row ───────────────────────────────────────────────────── */}
       {summary && (
         <div className="grid gap-4 md:grid-cols-3">
-          <Card className="bg-green-50 border-green-200">
+          <Card className="bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-900">
+
             <CardContent className="p-4">
               <p className="text-sm text-green-700 font-medium">Total Revenue</p>
               <p className="text-2xl font-bold text-green-900">
@@ -357,7 +359,7 @@ export default function DashboardPage() {
               <p className="text-xs text-green-600 mt-1">Last 30 days</p>
             </CardContent>
           </Card>
-          <Card className="bg-blue-50 border-blue-200">
+          <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-900">
             <CardContent className="p-4">
               <p className="text-sm text-blue-700 font-medium">Average Order Value</p>
               <p className="text-2xl font-bold text-blue-900">
@@ -366,7 +368,7 @@ export default function DashboardPage() {
               <p className="text-xs text-blue-600 mt-1">Per transaction</p>
             </CardContent>
           </Card>
-          <Card className="bg-purple-50 border-purple-200">
+          <Card className="bg-purple-50 dark:bg-purple-950 border-purple-200 dark:border-purple-900">
             <CardContent className="p-4">
               <p className="text-sm text-purple-700 font-medium">New Customers</p>
               <p className="text-2xl font-bold text-purple-900">
