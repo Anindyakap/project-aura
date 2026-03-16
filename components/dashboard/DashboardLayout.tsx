@@ -160,7 +160,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* ── Desktop Sidebar ───────────────────────────────────────────────────── */}
       <aside className={`
         fixed top-0 left-0 h-full flex-col
-        bg-white dark:bg-gray-900 border-r border-border
+        bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800
         transition-all duration-300
         hidden md:flex
         ${sidebarOpen ? 'w-64' : 'w-20'}
@@ -175,7 +175,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       `}>
 
         {/* Top Header */}
-        <header className="h-16 bg-white dark:bg-gray-900 border-b border-border
+        <header className="h-16 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800
           flex items-center justify-between px-4 md:px-6 sticky top-0 z-30">
 
           {/* Mobile hamburger menu */}

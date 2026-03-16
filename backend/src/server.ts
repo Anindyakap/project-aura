@@ -13,6 +13,7 @@ import brandsRoutes from './routes/brands.routes';
 import { registerSyncJobs } from './jobs/sync.jobs';
 import syncRoutes from './routes/sync.routes';
 import metricsRoutes from './routes/metrics.routes';
+import insightsRoutes from './routes/insights.routes';
 
 
 dotenv.config();
@@ -86,6 +87,8 @@ app.use(`/api/${API_VERSION}/integrations/shopify`, shopifyRoutes);
 app.use(`/api/${API_VERSION}/brands`, brandsRoutes);
 app.use(`/api/${API_VERSION}/sync`, syncRoutes);
 app.use(`/api/${API_VERSION}/metrics`, metricsRoutes);
+app.use(`/api/${API_VERSION}/insights`, insightsRoutes);
+
 
 
 // ============================================

@@ -302,3 +302,44 @@ export const getMetricsChart = async (
   if (!response.ok) throw new Error(data.message || 'Failed to fetch chart data');
   return data.data.points;
 };
+
+// ============================================
+// INSIGHTS API CALLS
+// ============================================
+
+export interface Insight {
+  id: string;
+  insight_type: string;
+  priority: 'high' | 'medium' | 'low';
+  title: string;
+  description: string;
+  action_items: string[];
+  related_data: Record<string, any>;
+  is_read: boolean;
+  created_at: string;
+}
+
+export interface InsightsResponse {
+  insights: Insight[];
+  unreadCount: number;
+  total: number;
+}
+
+export const getInsights = async (brandId: string): Promise<InsightsResponse> => {
+  const response = await apiFetch(`/insights?brandId=${brandId}`);
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to fetch insights');
+  return data.data;
+};
+
+export const markInsightAsRead = async (insightId: string): Promise<void> => {
+  const response = await apiFetch(`/insights/${insightId}/read`, { method: 'PATCH' });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to mark as read');
+};
+
+export const markAllInsightsAsRead = async (brandId: string): Promise<void> => {
+  const response = await apiFetch(`/insights/read-all?brandId=${brandId}`, { method: 'PATCH' });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to mark all as read');
+};

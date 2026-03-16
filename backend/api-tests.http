@@ -11,7 +11,6 @@
 ### Variables
 @baseUrl = http://localhost:4000/api/v1
 @token = ***REMOVED***
-
 # ============================================
 # HEALTH & INFO
 # ============================================
@@ -189,10 +188,28 @@ Authorization: Bearer {{token}}
 # GET {{baseUrl}}/integrations
 # Authorization: Bearer {{token}}
 
-### Get Metrics (Future)
-# GET {{baseUrl}}/metrics
-# Authorization: Bearer {{token}}
+### Get metrics summary
+GET http://localhost:4000/api/v1/metrics/summary?brandId=1c8b2004-e667-48a6-b717-cb93de9f1708
+Authorization: Bearer {{token}}
+
+
+### Get chart data (revenue for last 30 days)
+GET http://localhost:4000/api/v1/metrics/chart?brandId=1c8b2004-e667-48a6-b717-cb93de9f1708&days=30&metric=revenue
+Authorization: Bearer {{token}}
+
+### Production metrics summary
+GET https://aura-backend-ks8e.onrender.com/api/v1/metrics/summary?brandId=1c8b2004-e667-48a6-b717-cb93de9f1708
+Authorization: Bearer {{token}}
 
 ### Get Insights (Future)
 # GET {{baseUrl}}/insights
 # Authorization: Bearer {{token}}
+
+### Generate insights
+POST http://localhost:4000/api/v1/insights/generate
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### Fetch insights
+GET http://localhost:4000/api/v1/insights?brandId=1c8b2004-e667-48a6-b717-cb93de9f1708
+Authorization: Bearer {{token}}
