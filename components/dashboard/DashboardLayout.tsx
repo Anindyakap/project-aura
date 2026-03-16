@@ -53,6 +53,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Fetch unread insights count for badge
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const brands = await getBrands();
+        if (brands.length === 0) return;
+        const data = await getInsights(brands[0].id);
+        setUnreadInsights(data.unreadCount);
+      } catch (e) {
+        // Silently fail — badge is non-critical
+      }
+    };
+    fetchUnreadCount();
+}, [pathname]); // Re-fetch when user navigates (catches mark-as-read updates)
   const getInitials = (name: string | null, email: string): string => {
     if (name) return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     return email[0].toUpperCase();
@@ -91,19 +105,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           const Icon = item.icon;
           const isActive = pathname === item.href;
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 ${
-                isActive
-                  ? 'bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 font-medium'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-              }`}
-            >
-              <Icon className="h-5 w-5 flex-shrink-0" />
-              {sidebarOpen && <span className="text-sm">{item.name}</span>}
-              {!sidebarOpen && isActive && <ChevronRight className="h-3 w-3 ml-auto" />}
-            </Link>
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 ${
+                  isActive
+                    ? 'bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 font-medium'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                }`}
+              >
+                <Icon className="h-5 w-5 flex-shrink-0" />
+                {sidebarOpen && (
+                  <span className="flex-1 text-sm">{item.name}</span>
+                )}
+                {/* Unread badge — only on Insights, only when there are unread */}
+                {sidebarOpen && item.showBadge && unreadInsights > 0 && (
+                  <span className="ml-auto flex items-center justify-center
+                    w-5 h-5 text-xs font-bold bg-red-500 text-white rounded-full">
+                    {unreadInsights > 9 ? '9+' : unreadInsights}
+                  </span>
+                )}
+                {/* Collapsed sidebar — show dot instead of number */}
+                {!sidebarOpen && item.showBadge && unreadInsights > 0 && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                )}
+              </Link>
           );
         })}
       </nav>
