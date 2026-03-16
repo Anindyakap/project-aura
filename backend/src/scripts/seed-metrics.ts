@@ -53,7 +53,7 @@ const seedMetrics = async (): Promise<void> => {
 
   // Generate data for last 30 days
   // Day 0 = today, Day 29 = 29 days ago
-  for (let daysBack = 29; daysBack >= 0; daysBack--) {
+  for (let daysBack = 59; daysBack >= 0; daysBack--) {
     const date = daysAgo(daysBack);
     const dayOfWeek = new Date(date).getDay(); // 0=Sunday, 6=Saturday
 
@@ -64,7 +64,7 @@ const seedMetrics = async (): Promise<void> => {
     // Random variation makes it look natural, not perfectly linear
     //
     // Growth multiplier: starts at 0.85, ends at 1.15 (30% growth over month)
-    const growthMultiplier = 0.85 + (29 - daysBack) * (0.30 / 29);
+    const growthMultiplier = 0.95 + (59 - daysBack) * (0.10 / 59);
 
     // Weekend multiplier: 40% more orders on weekends
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;

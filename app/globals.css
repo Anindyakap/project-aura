@@ -235,3 +235,6 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
 }
+.dark * {
+  border-color: rgb(31 41 55); /* gray-800 */
+}

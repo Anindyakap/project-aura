@@ -12,6 +12,7 @@
 
 import cron from 'node-cron';
 import { syncAllShopifyIntegrations } from '../services/shopify.sync';
+import { runInsightsEngine } from '../services/insights.engine';
 
 /**
  * Registers all scheduled jobs
@@ -24,16 +25,15 @@ export const registerSyncJobs = (): void => {
   // Runs every day at midnight UTC
   // Fetches today's orders from all connected Shopify stores
   cron.schedule('0 0 * * *', async () => {
-    console.log('⏰ [CRON] Daily Shopify sync triggered at', new Date().toISOString());
-
+    console.log('⏰ [CRON] Daily sync triggered at', new Date().toISOString());
     try {
       await syncAllShopifyIntegrations();
+      // Run insights engine after data is fresh
+      await runInsightsEngine();
     } catch (error: any) {
-      console.error('❌ [CRON] Daily Shopify sync failed:', error.message);
+      console.error('❌ [CRON] Daily job failed:', error.message);
     }
-  }, {
-    timezone: 'UTC',  // always run in UTC to avoid timezone confusion
-  });
+  }, { timezone: 'UTC' });
 
   console.log('✅ Sync jobs registered: Shopify daily sync at 00:00 UTC');
-};
+};  
