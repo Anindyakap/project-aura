@@ -20,12 +20,13 @@ import {
   LayoutDashboard, Link2, BarChart3, Lightbulb,
   Menu, X, LogOut, User, Sun, Moon, ChevronRight,
 } from 'lucide-react';
+import { getBrands, getInsights } from '@/lib/api';
 
 const menuItems = [
   { name: 'Overview',     href: '/dashboard',              icon: LayoutDashboard },
   { name: 'Integrations', href: '/dashboard/integrations', icon: Link2 },
   { name: 'Metrics',      href: '/dashboard/metrics',      icon: BarChart3 },
-  { name: 'Insights',     href: '/dashboard/insights',     icon: Lightbulb },
+  { name: 'Insights',     href: '/dashboard/insights',     icon: Lightbulb, showBadge: true},
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -34,6 +35,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname  = usePathname();
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
+  const [unreadInsights, setUnreadInsights] = useState(0);
+
 
   // Close mobile sidebar when route changes
   useEffect(() => {
