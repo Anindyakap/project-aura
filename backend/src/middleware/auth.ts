@@ -7,11 +7,9 @@ import { AppError } from './errorHandler';
 import { JWTPayload } from '../types/user.types';
 
 // Extend Express Request type to include user
-declare global {
-  namespace Express {
-    interface Request {
-      user?: JWTPayload;
-    }
+declare module 'express-serve-static-core' {
+  interface Request {
+    user?: JWTPayload;
   }
 }
 

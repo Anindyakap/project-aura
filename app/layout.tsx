@@ -1,13 +1,15 @@
 // app/layout.tsx
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 
-const inter = Inter({
-  subsets: ['latin'],
+const inter = localFont({
+  src: './fonts/InterVariable.woff2',
   variable: '--font-inter',
+  weight: '100 900',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {

@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import axios from 'axios';
 import { pool } from '../config/database';
 import { AppError, catchAsync } from '../middleware/errorHandler';
+import { logError, logInfo } from '../utils/logger';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 const CLIENT_ID = process.env.SHOPIFY_CLIENT_ID!;
@@ -154,14 +155,18 @@ export const shopifyCallback = async (
       ]
     );
 
-    console.log(`✅ Shopify connected: ${shopData.name} (${shop}) → brand ${brandId}`);
+    logInfo('Shopify OAuth connection completed');
 
     // 7. Redirect back to frontend with success
     res.redirect(
       `${FRONTEND_URL}/dashboard/integrations?shopify=connected&shop=${encodeURIComponent(shop)}`
     );
-  } catch (error: any) {
-    console.error('❌ Shopify OAuth error:', error.message);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    logError('Shopify OAuth connection failed', {
+      errorName: error instanceof Error ? error.name : 'UnknownError',
+      errorMessage: message,
+    });
     res.redirect(`${FRONTEND_URL}/dashboard?shopify=error&reason=token_exchange_failed`);
   }
 };

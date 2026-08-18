@@ -5,12 +5,14 @@
 # 1. Make sure backend server is running (npm run dev)
 # 2. Click "Send Request" above any request
 # 3. Response appears in a new panel on the right
-# 4. After login/register, copy the token and paste it in @token variable below
+# 4. After login/register, temporarily paste the token into @token below.
+#    Clear it before committing or sharing this file.
 # ============================================
 
 ### Variables
 @baseUrl = http://localhost:4000/api/v1
-@token = ***REMOVED***
+# Paste a newly issued local token here while testing. Never commit it.
+@token =
 # ============================================
 # HEALTH & INFO
 # ============================================
@@ -71,8 +73,8 @@ GET http://localhost:4000/api/v1/integrations/shopify/status?brandId=1c8b2004-e6
 Authorization: Bearer {{token}}
 
 ### 5. Get Current User Profile (Protected Route)
-# ⚠️ IMPORTANT: First run login above, copy the token from response
-# Then replace YOUR_TOKEN_HERE at the top with your actual token
+# First, run login above and temporarily copy the token from the response.
+# Then paste it in the @token variable at the top and clear it before committing.
 GET {{baseUrl}}/auth/me
 Authorization: Bearer {{token}}
 

@@ -90,3 +90,7 @@ coverage/
 tmp/
 temp/
 *.tmp
+
+# Generated Supabase CLI state
+supabase/.branches/
+supabase/.temp/

@@ -8,6 +8,7 @@
 //   4. Old insights (>7 days) are deleted to keep things fresh
 
 import { pool } from '../config/database';
+import { logError, logInfo } from '../utils/logger';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -25,7 +26,7 @@ interface InsightToSave {
   title: string;
   description: string;
   actionItems: string[];
-  relatedData: Record<string, any>;
+  relatedData: Record<string, number>;
 }
 
 // ─── Main Engine Function ─────────────────────────────────────────────────────
@@ -35,7 +36,7 @@ interface InsightToSave {
  * Called by the cron job after the daily sync completes
  */
 export const runInsightsEngine = async (): Promise<void> => {
-  console.log('🧠 Starting insights engine...');
+  logInfo('Insights engine started');
 
   try {
     // Get all brands that have metrics data
@@ -47,24 +48,34 @@ export const runInsightsEngine = async (): Promise<void> => {
     const brandIds = brandsResult.rows.map(r => r.brand_id);
 
     if (brandIds.length === 0) {
-      console.log('ℹ️  No brands with metrics found, skipping insights');
+      logInfo('Insights engine skipped because no brands have metrics');
       return;
     }
 
-    console.log(`📊 Running insights for ${brandIds.length} brand(s)...`);
+    logInfo('Insights engine found brands to process', {
+      brandCount: brandIds.length,
+    });
 
     for (const brandId of brandIds) {
       try {
         await generateInsightsForBrand(brandId);
-      } catch (error: any) {
+      } catch (error) {
         // If one brand fails, continue with others
-        console.error(`❌ Insights failed for brand ${brandId}:`, error.message);
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        logError('Insights generation failed for one brand', {
+          errorName: error instanceof Error ? error.name : 'UnknownError',
+          errorMessage: message,
+        });
       }
     }
 
-    console.log('✅ Insights engine completed');
-  } catch (error: any) {
-    console.error('❌ Fatal error in insights engine:', error.message);
+    logInfo('Insights engine completed');
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    logError('Insights engine failed', {
+      errorName: error instanceof Error ? error.name : 'UnknownError',
+      errorMessage: message,
+    });
     throw error;
   }
 };
@@ -72,7 +83,7 @@ export const runInsightsEngine = async (): Promise<void> => {
 // ─── Per-Brand Insights Generator ─────────────────────────────────────────────
 
 const generateInsightsForBrand = async (brandId: string): Promise<void> => {
-  console.log(`  💡 Generating insights for brand ${brandId}...`);
+  logInfo('Insights generation started for one brand');
 
   // STEP 1: Delete old insights (older than 7 days) for this brand
   // WHY: Keep the insights list fresh and relevant
@@ -108,7 +119,7 @@ const generateInsightsForBrand = async (brandId: string): Promise<void> => {
   }));
 
   if (days.length < 7) {
-    console.log(`  ⚠️  Not enough data for brand ${brandId}, need at least 7 days`);
+    logInfo('Insights generation skipped because there is not enough data');
     return;
   }
 
@@ -281,7 +292,9 @@ const generateInsightsForBrand = async (brandId: string): Promise<void> => {
   }
 
   // STEP 6: Save all triggered insights to database
-  console.log(`  📝 Saving ${insights.length} insight(s) for brand ${brandId}`);
+  logInfo('Insights will be saved', {
+    insightCount: insights.length,
+  });
 
   for (const insight of insights) {
     await saveInsight(insight);

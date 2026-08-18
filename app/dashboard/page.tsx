@@ -3,14 +3,38 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Users, Receipt } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  ShoppingCart,
+  Users,
+  Receipt,
+  type LucideIcon,
+} from 'lucide-react';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  type TooltipContentProps,
+} from 'recharts';
 import { getBrands, getMetricsSummary, getMetricsChart, Brand, MetricsSummary, ChartPoint } from '@/lib/api';
 import { useTheme } from '@/contexts/ThemeContext';
 
-function KpiCard({ title, formatted, change, icon: Icon, color, bgColor }: {
-  title: string; formatted: string; change: number; icon: any; color: string; bgColor: string;
-}) {
+interface KpiCardProps {
+  title: string;
+  formatted: string;
+  change: number;
+  icon: LucideIcon;
+  color: string;
+  bgColor: string;
+}
+
+function KpiCard({ title, formatted, change, icon: Icon, color, bgColor }: KpiCardProps) {
   const isPositive = change >= 0;
   return (
     <Card className="card-shadow dark:bg-gray-800 dark:border-gray-700">
@@ -35,7 +59,11 @@ function KpiCard({ title, formatted, change, icon: Icon, color, bgColor }: {
   );
 }
 
-function CustomTooltip({ active, payload, label, prefix = '' }: any) {
+interface CustomTooltipProps extends Partial<TooltipContentProps<number, string>> {
+  prefix?: string;
+}
+
+function CustomTooltip({ active, payload, label, prefix = '' }: CustomTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3">

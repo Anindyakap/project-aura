@@ -6,6 +6,9 @@ import { pool } from './config/database';
 import { corsOptions } from './config/cors';
 import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/logger';
+import { assignRequestId } from './middleware/requestId';
+import { logError, logInfo, logWarn } from './utils/logger';
+import { getRequiredJwtSecret } from './utils/authConfig';
 import authRoutes from './routes/auth.routes';
 import cookieParser from 'cookie-parser';
 import shopifyRoutes from './routes/shopify.routes';
@@ -17,8 +20,10 @@ import insightsRoutes from './routes/insights.routes';
 
 
 dotenv.config();
+getRequiredJwtSecret(process.env);
 
 const app: Application = express();
+app.set('trust proxy', 1);
 const PORT = parseInt(process.env.PORT || '4000', 10);
 const API_VERSION = process.env.API_VERSION || 'v1';
 
@@ -28,6 +33,7 @@ const API_VERSION = process.env.API_VERSION || 'v1';
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(assignRequestId);
 app.use(requestLogger);
 app.use(cookieParser());
 
@@ -98,6 +104,7 @@ app.use((req: Request, res: Response) => {
   res.status(404).json({
     error: 'Not Found',
     message: `Route ${req.method} ${req.path} not found`,
+    requestId: req.requestId,
   });
 });
 
@@ -108,14 +115,12 @@ app.use(errorHandler);
 // Don't wait for DB - let server start first!
 // ============================================
 app.listen(PORT, '0.0.0.0', () => {
-  console.log('╔════════════════════════════════════════╗');
-  console.log('║  🚀 Aura Backend API Server Running   ║');
-  console.log('╠════════════════════════════════════════╣');
-  console.log(`║  Environment: ${(process.env.NODE_ENV || 'development').padEnd(24)} ║`);
-  console.log(`║  Port: ${PORT.toString().padEnd(31)} ║`);
-  console.log(`║  API Version: ${(API_VERSION).padEnd(24)} ║`);
-  console.log('╚════════════════════════════════════════╝');
-  
+  logInfo('Server started', {
+    environment: process.env.NODE_ENV || 'development',
+    port: PORT,
+    apiVersion: API_VERSION,
+  });
+
   // Register scheduled jobs (e.g., daily sync)
   registerSyncJobs();
 
@@ -130,20 +135,27 @@ const connectDatabase = async (): Promise<void> => {
   while (retries > 0) {
     try {
       const client = await pool.connect();
-      const result = await client.query('SELECT NOW()');
-      console.log('✅ Database connected at:', result.rows[0].now);
+      await client.query('SELECT NOW()');
+      logInfo('Database connected');
       client.release();
       return;
     } catch (error) {
       retries--;
-      console.error(`❌ DB connection failed (${5 - retries}/5):`, error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+      logWarn('Database connection attempt failed', {
+        attempt: 5 - retries,
+        remainingRetries: retries,
+        errorMessage,
+      });
 
       if (retries === 0) {
-        console.error('💀 Could not connect to database after 5 attempts');
+        logError('Database connection failed after all retries', {
+          errorMessage,
+        });
         return; // Don't crash the server!
       }
 
-      console.log(`⏳ Retrying in 3 seconds... (${retries} left)`);
       await new Promise(resolve => setTimeout(resolve, 3000));
     }
   }
@@ -151,11 +163,11 @@ const connectDatabase = async (): Promise<void> => {
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down...');
+  logInfo('SIGTERM received, shutting down');
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down...');
+  logInfo('SIGINT received, shutting down');
   process.exit(0);
 });

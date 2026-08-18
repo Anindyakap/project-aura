@@ -6,6 +6,7 @@ import { register, login, getMe } from '../controllers/auth.controller';
 import { validate } from '../middleware/validate';
 import { registerSchema, loginSchema } from '../utils/validation';
 import { protect } from '../middleware/auth';
+import { authRateLimiter } from '../middleware/rateLimit';
 
 const router = Router();
 
@@ -14,14 +15,14 @@ const router = Router();
  * @desc    Register a new user
  * @access  Public
  */
-router.post('/register', validate(registerSchema), register);
+router.post('/register', authRateLimiter, validate(registerSchema), register);
 
 /**
  * @route   POST /api/v1/auth/login
  * @desc    Login user
  * @access  Public
  */
-router.post('/login', validate(loginSchema), login);
+router.post('/login', authRateLimiter, validate(loginSchema), login);
 
 /**
  * @route   GET /api/v1/auth/me

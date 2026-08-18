@@ -2,6 +2,7 @@
 // Request logging middleware
 
 import { Request, Response, NextFunction } from 'express';
+import { getSafePath, logError, logInfo, logWarn } from '../utils/logger';
 
 export const requestLogger = (
   req: Request,
@@ -13,19 +14,25 @@ export const requestLogger = (
   // Log when response finishes
   res.on('finish', () => {
     const duration = Date.now() - startTime;
-    const timestamp = new Date().toISOString();
     const method = req.method;
-    const url = req.originalUrl || req.url;
+    const path = getSafePath(req.originalUrl || req.url);
     const status = res.statusCode;
 
-    // Color code based on status
-    let statusColor = '\x1b[32m'; // Green for 2xx
-    if (status >= 400 && status < 500) statusColor = '\x1b[33m'; // Yellow for 4xx
-    if (status >= 500) statusColor = '\x1b[31m'; // Red for 5xx
+    const context = {
+      requestId: req.requestId,
+      method,
+      path,
+      statusCode: status,
+      durationMs: duration,
+    };
 
-    console.log(
-      `${timestamp} | ${method.padEnd(6)} | ${statusColor}${status}\x1b[0m | ${duration}ms | ${url}`
-    );
+    if (status >= 500) {
+      logError('Request completed with server error', context);
+    } else if (status >= 400) {
+      logWarn('Request completed with client error', context);
+    } else {
+      logInfo('Request completed', context);
+    }
   });
 
   next();

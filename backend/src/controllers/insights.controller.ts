@@ -5,6 +5,7 @@ import { Request, Response, NextFunction } from 'express';
 import { pool } from '../config/database';
 import { AppError, catchAsync } from '../middleware/errorHandler';
 import { runInsightsEngine } from '../services/insights.engine';
+import { logInfo } from '../utils/logger';
 
 // ─── GET /api/v1/insights?brandId=xxx ─────────────────────────────────────────
 // Returns all insights for a brand, newest first
@@ -81,7 +82,7 @@ export const markAllAsRead = catchAsync(
 // Manually triggers the insights engine (for testing)
 export const generateInsights = catchAsync(
   async (_req: Request, res: Response, _next: NextFunction): Promise<void> => {
-    console.log('🧠 Manual insights generation triggered');
+    logInfo('Manual insights generation triggered');
     await runInsightsEngine();
 
     res.status(200).json({

@@ -10,6 +10,7 @@ import { Router, Request, Response } from 'express';
 import { protect } from '../middleware/auth';
 import { syncAllShopifyIntegrations } from '../services/shopify.sync';
 import { catchAsync } from '../middleware/errorHandler';
+import { logInfo } from '../utils/logger';
 
 const router = Router();
 
@@ -20,7 +21,7 @@ router.post(
   '/shopify',
   protect,
   catchAsync(async (_req: Request, res: Response) => {
-    console.log('🔄 Manual Shopify sync triggered via API');
+    logInfo('Manual Shopify sync triggered');
 
     // Run sync (this might take a few seconds for stores with many orders)
     await syncAllShopifyIntegrations();

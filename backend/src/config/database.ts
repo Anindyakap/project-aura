@@ -3,6 +3,7 @@
 
 import { Pool, PoolClient } from 'pg';
 import dotenv from 'dotenv';
+import { logError, logInfo, logWarn } from '../utils/logger';
 
 dotenv.config();
 
@@ -33,22 +34,34 @@ export const testConnection = async (): Promise<void> => {
   while (retries > 0) {
     try {
       const client = await pool.connect();
-      const result = await client.query('SELECT NOW()');
-      console.log('✅ Database connected at:', result.rows[0].now);
+      await client.query('SELECT NOW()');
+      logInfo('Database connection established');
       client.release();
       isConnected = true;
       return;
     } catch (error) {
       retries--;
       isConnected = false;
-      console.error(`❌ DB connection failed (${5 - retries}/5):`, error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+      logWarn('Database connection attempt failed', {
+        attempt: 5 - retries,
+        remainingRetries: retries,
+        errorName: error instanceof Error ? error.name : 'UnknownError',
+        errorMessage,
+      });
 
       if (retries === 0) {
-        console.error('💀 Could not connect after 5 attempts. Will retry on next request.');
+        logError('Database connection failed after all retries', {
+          errorName: error instanceof Error ? error.name : 'UnknownError',
+          errorMessage,
+        });
         return; // Don't crash - let app run
       }
 
-      console.log(`⏳ Retrying in 3 seconds... (${retries} left)`);
+      logInfo('Database connection retry scheduled', {
+        remainingRetries: retries,
+      });
       await new Promise(resolve => setTimeout(resolve, 3000));
     }
   }
@@ -59,7 +72,10 @@ export const getConnection = async (): Promise<PoolClient> => {
   try {
     return await pool.connect();
   } catch (error) {
-    console.log('⚠️ Connection failed, attempting to reconnect...');
+    logWarn('Database connection unavailable; attempting reconnect', {
+      errorName: error instanceof Error ? error.name : 'UnknownError',
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+    });
     await testConnection();
     return await pool.connect();
   }
@@ -74,7 +90,10 @@ export const healthCheck = async (): Promise<boolean> => {
     isConnected = true;
     return true;
   } catch (error) {
-    console.error('Database health check failed:', error);
+    logError('Database health check failed', {
+      errorName: error instanceof Error ? error.name : 'UnknownError',
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+    });
     isConnected = false;
     // Try to reconnect in background
     testConnection().catch(() => {});
@@ -84,7 +103,10 @@ export const healthCheck = async (): Promise<boolean> => {
 
 // Handle pool errors
 pool.on('error', (err) => {
-  console.error('❌ Unexpected database error:', err);
+  logError('Unexpected database pool error', {
+    errorName: err.name,
+    errorMessage: err.message,
+  });
   isConnected = false;
   // Auto-reconnect on error
   testConnection().catch(() => {});
@@ -93,7 +115,7 @@ pool.on('error', (err) => {
 // Graceful shutdown
 export const closePool = async (): Promise<void> => {
   await pool.end();
-  console.log('Database pool closed');
+  logInfo('Database pool closed');
 };
 
 // Check if connected

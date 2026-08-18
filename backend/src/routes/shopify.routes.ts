@@ -9,6 +9,12 @@ import {
 } from '../controllers/shopify.controller';
 import { verifyToken, extractTokenFromHeader } from '../utils/auth';
 import { AppError } from '../middleware/errorHandler';
+import { validate } from '../middleware/validate';
+import {
+  brandIdQuerySchema,
+  shopifyConnectSchema,
+  shopifyDisconnectSchema,
+} from '../utils/validation';
 
 const router = Router();
 
@@ -36,13 +42,13 @@ const flexibleAuth = (req: Request, _res: Response, next: NextFunction) => {
 };
 
 // Connect: uses flexibleAuth (browser redirect needs token in query param)
-router.get('/connect', flexibleAuth, connectShopify);
+router.get('/connect', validate(shopifyConnectSchema), flexibleAuth, connectShopify);
 
 // Callback: public, Shopify calls this
 router.get('/callback', shopifyCallback);
 
 // Status & disconnect: normal protected routes
-router.get('/status', protect, getShopifyStatus);
-router.delete('/disconnect', protect, disconnectShopify);
+router.get('/status', protect, validate(brandIdQuerySchema), getShopifyStatus);
+router.delete('/disconnect', protect, validate(shopifyDisconnectSchema), disconnectShopify);
 
 export default router;

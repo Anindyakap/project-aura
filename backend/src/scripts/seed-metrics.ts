@@ -1,22 +1,22 @@
 // src/scripts/seed-metrics.ts
-// Generates 30 days of realistic metrics data for development/demo purposes
+// Generates 60 days of realistic metrics data for development/demo purposes
 //
 // HOW TO RUN:
 //   npx ts-node src/scripts/seed-metrics.ts
 //
 // WHAT IT DOES:
 //   Inserts revenue, orders, and new_customers metrics
-//   for the last 30 days into the metrics table
+//   for the last 60 days into the metrics table
 //   Uses realistic patterns (weekends higher, slight growth trend)
 
 import { pool } from '../config/database';
 import dotenv from 'dotenv';
+import { logError, logInfo, logWarn } from '../utils/logger';
+import { getSeedConfig } from '../utils/seedConfig';
 dotenv.config();
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-// Change these to match your actual IDs from Supabase
-const BRAND_ID = '1c8b2004-e667-48a6-b717-cb93de9f1708';
-const INTEGRATION_ID = '0c67dbca-c3dc-4792-81bc-b3b4434a6a13';
+const { brandId, integrationId } = getSeedConfig(process.env);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -38,21 +38,18 @@ const daysAgo = (n: number): string => {
 // ─── Seed Function ────────────────────────────────────────────────────────────
 
 const seedMetrics = async (): Promise<void> => {
-  console.log('🌱 Starting metrics seed...');
-  console.log(`   Brand ID:       ${BRAND_ID}`);
-  console.log(`   Integration ID: ${INTEGRATION_ID}`);
-  console.log('');
+  logInfo('Metrics seed started');
 
   // Delete existing metrics for this brand so we start fresh
   // WHY: Running the script twice would create duplicates otherwise
   await pool.query(
     `DELETE FROM metrics WHERE brand_id = $1`,
-    [BRAND_ID]
+    [brandId]
   );
-  console.log('🗑️  Cleared existing metrics');
+  logWarn('Metrics seed cleared existing metrics');
 
-  // Generate data for last 30 days
-  // Day 0 = today, Day 29 = 29 days ago
+  // Generate data for the last 60 days
+  // Day 0 = today, Day 59 = 59 days ago
   for (let daysBack = 59; daysBack >= 0; daysBack--) {
     const date = daysAgo(daysBack);
     const dayOfWeek = new Date(date).getDay(); // 0=Sunday, 6=Saturday
@@ -60,10 +57,11 @@ const seedMetrics = async (): Promise<void> => {
     // ── Realistic patterns ──────────────────────────────────────────────────
     //
     // Weekends (Sat/Sun) have higher traffic for D2C jewelry brands
-    // There's a slight upward growth trend over the 30 days
+    // There's a slight upward growth trend over the 60 days
     // Random variation makes it look natural, not perfectly linear
     //
-    // Growth multiplier: starts at 0.85, ends at 1.15 (30% growth over month)
+    // Growth multiplier: starts at 0.95 and ends at 1.05
+    // This is a 0.10 increase across the 60-day period.
     const growthMultiplier = 0.95 + (59 - daysBack) * (0.10 / 59);
 
     // Weekend multiplier: 40% more orders on weekends
@@ -102,7 +100,7 @@ const seedMetrics = async (): Promise<void> => {
        VALUES ($1, $2, $3, 'revenue', $4, 'USD')
        ON CONFLICT (brand_id, metric_type, date)
        DO UPDATE SET value = EXCLUDED.value`,
-      [BRAND_ID, INTEGRATION_ID, date, revenue]
+      [brandId, integrationId, date, revenue]
     );
 
     await pool.query(
@@ -110,7 +108,7 @@ const seedMetrics = async (): Promise<void> => {
        VALUES ($1, $2, $3, 'orders', $4, 'USD')
        ON CONFLICT (brand_id, metric_type, date)
        DO UPDATE SET value = EXCLUDED.value`,
-      [BRAND_ID, INTEGRATION_ID, date, orders]
+      [brandId, integrationId, date, orders]
     );
 
     await pool.query(
@@ -118,19 +116,20 @@ const seedMetrics = async (): Promise<void> => {
        VALUES ($1, $2, $3, 'new_customers', $4, 'USD')
        ON CONFLICT (brand_id, metric_type, date)
        DO UPDATE SET value = EXCLUDED.value`,
-      [BRAND_ID, INTEGRATION_ID, date, newCustomers]
+      [brandId, integrationId, date, newCustomers]
     );
 
-    console.log(`   📅 ${date} | revenue: $${revenue} | orders: ${orders} | new customers: ${newCustomers}`);
   }
 
-  console.log('');
-  console.log('✅ Seed complete! 30 days of metrics inserted.');
+  logInfo('Metrics seed completed');
   await pool.end();
 };
 
 // Run the seed
 seedMetrics().catch((error) => {
-  console.error('❌ Seed failed:', error.message);
+  logError('Metrics seed failed', {
+    errorName: error instanceof Error ? error.name : 'UnknownError',
+    errorMessage: error instanceof Error ? error.message : 'Unknown error',
+  });
   process.exit(1);
 });

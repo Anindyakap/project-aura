@@ -13,27 +13,40 @@
 import cron from 'node-cron';
 import { syncAllShopifyIntegrations } from '../services/shopify.sync';
 import { runInsightsEngine } from '../services/insights.engine';
+import { logError, logInfo } from '../utils/logger';
 
 /**
  * Registers all scheduled jobs
  * Called once from server.ts when the server starts
  */
 export const registerSyncJobs = (): void => {
-  console.log('⏰ Registering sync jobs...');
+  logInfo('Sync jobs registered', {
+    jobName: 'daily-shopify-sync',
+  });
 
   // ── Daily Shopify Sync ──────────────────────────────────────────────────────
   // Runs every day at midnight UTC
   // Fetches today's orders from all connected Shopify stores
   cron.schedule('0 0 * * *', async () => {
-    console.log('⏰ [CRON] Daily sync triggered at', new Date().toISOString());
+    logInfo('Scheduled sync started', {
+      jobName: 'daily-shopify-sync',
+    });
+
     try {
       await syncAllShopifyIntegrations();
       // Run insights engine after data is fresh
       await runInsightsEngine();
-    } catch (error: any) {
-      console.error('❌ [CRON] Daily job failed:', error.message);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      logError('Scheduled sync failed', {
+        jobName: 'daily-shopify-sync',
+        errorName: error instanceof Error ? error.name : 'UnknownError',
+        errorMessage: message,
+      });
     }
   }, { timezone: 'UTC' });
 
-  console.log('✅ Sync jobs registered: Shopify daily sync at 00:00 UTC');
-};  
+  logInfo('Daily Shopify sync scheduled', {
+    jobName: 'daily-shopify-sync',
+  });
+};

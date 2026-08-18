@@ -314,7 +314,7 @@ export interface Insight {
   title: string;
   description: string;
   action_items: string[];
-  related_data: Record<string, any>;
+  related_data: Record<string, number>;
   is_read: boolean;
   created_at: string;
 }

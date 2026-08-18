@@ -38,3 +38,54 @@ export const loginSchema = z.object({
 
 // UUID validation
 export const uuidSchema = z.string().uuid('Invalid ID format');
+
+export const brandIdQuerySchema = z.object({
+  query: z.object({
+    brandId: uuidSchema,
+  }).strict(),
+});
+
+export const createBrandSchema = z.object({
+  body: z.object({
+    name: z.string().trim().min(1, 'Brand name is required').max(100),
+    domain: z.string().trim().max(255).optional(),
+    currency: z.string().trim().length(3, 'Currency must have 3 characters')
+      .regex(/^[A-Za-z]{3}$/, 'Currency must contain only letters')
+      .optional(),
+    timezone: z.string().trim().min(1).max(100).optional(),
+  }).strict(),
+});
+
+export const metricsSummarySchema = brandIdQuerySchema;
+
+export const metricsChartSchema = z.object({
+  query: z.object({
+    brandId: uuidSchema,
+    metric: z.enum(['revenue', 'orders', 'new_customers']).optional(),
+    days: z.coerce.number().int().min(1).max(365).optional(),
+  }).strict(),
+});
+
+export const insightIdParamSchema = z.object({
+  params: z.object({
+    id: uuidSchema,
+  }).strict(),
+});
+
+export const shopifyConnectSchema = z.object({
+  query: z.object({
+    shop: z.string()
+      .regex(
+        /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/,
+        'Shop must be a valid .myshopify.com domain'
+      ),
+    brandId: uuidSchema,
+    token: z.string().min(1).max(4096).optional(),
+  }).strict(),
+});
+
+export const shopifyDisconnectSchema = z.object({
+  body: z.object({
+    brandId: uuidSchema,
+  }).strict(),
+});

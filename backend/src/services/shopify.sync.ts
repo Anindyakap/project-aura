@@ -10,6 +10,7 @@
 
 import axios from 'axios';
 import { pool } from '../config/database';
+import { logError, logInfo } from '../utils/logger';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -40,7 +41,7 @@ interface ShopifyIntegration {
  * Called by the cron job daily, or manually via API endpoint
  */
 export const syncAllShopifyIntegrations = async (): Promise<void> => {
-  console.log('🔄 Starting Shopify sync for all integrations...');
+  logInfo('Shopify sync started');
 
   try {
     // STEP 1: Get all connected Shopify integrations from DB
@@ -56,11 +57,13 @@ export const syncAllShopifyIntegrations = async (): Promise<void> => {
     const integrations = result.rows;
 
     if (integrations.length === 0) {
-      console.log('ℹ️  No connected Shopify integrations found, skipping sync');
+      logInfo('Shopify sync skipped because no integrations are connected');
       return;
     }
 
-    console.log(`📦 Found ${integrations.length} connected Shopify integration(s)`);
+    logInfo('Shopify sync found connected integrations', {
+      integrationCount: integrations.length,
+    });
 
     // STEP 2: Sync each integration one by one
     // We use a for loop (not Promise.all) to avoid hitting Shopify rate limits
@@ -68,13 +71,15 @@ export const syncAllShopifyIntegrations = async (): Promise<void> => {
     for (const integration of integrations) {
       try {
         await syncSingleIntegration(integration);
-      } catch (error: any) {
-        console.error(
-            `❌ Failed to sync integration ${integration.id}:`,
-        error.message,
-        error.response?.status,
-        error.response?.data  // ← this shows Shopify's actual error message
-        );
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+
+        logError('Shopify integration sync failed', {
+          errorName: error instanceof Error ? error.name : 'UnknownError',
+          errorMessage: message,
+          upstreamStatusCode: status,
+        });
 
         // Mark integration as error so user knows something is wrong
         await pool.query(
@@ -85,9 +90,13 @@ export const syncAllShopifyIntegrations = async (): Promise<void> => {
       }
     }
 
-    console.log('✅ Shopify sync completed for all integrations');
-  } catch (error: any) {
-    console.error('❌ Fatal error during Shopify sync:', error.message);
+    logInfo('Shopify sync completed');
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    logError('Shopify sync failed', {
+      errorName: error instanceof Error ? error.name : 'UnknownError',
+      errorMessage: message,
+    });
     throw error;
   }
 };
@@ -103,7 +112,7 @@ const syncSingleIntegration = async (
   const { id, brand_id, access_token, platform_account_id } = integration;
   const shop = platform_account_id; // e.g. "aura-testing.myshopify.com"
 
-  console.log(`  🛍️  Syncing ${shop}...`);
+  logInfo('Shopify integration sync started');
 
   // STEP 3: Calculate date range
   // We fetch "today" in UTC
@@ -127,8 +136,6 @@ const syncSingleIntegration = async (
     endOfDay
   );
 
-  console.log(`     📊 Found ${orders.length} orders for ${dateStr}`);
-
   // STEP 5: Calculate metrics from orders
   const metrics = calculateMetrics(orders, dateStr);
 
@@ -142,7 +149,9 @@ const syncSingleIntegration = async (
     [id]
   );
 
-  console.log(`  ✅ ${shop} synced: revenue=$${metrics.revenue}, orders=${metrics.orders}`);
+  logInfo('Shopify integration sync completed', {
+    orderCount: orders.length,
+  });
 };
 
 // ─── Shopify API Fetcher ──────────────────────────────────────────────────────

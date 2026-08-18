@@ -87,6 +87,7 @@ PostgreSQL database hosted on Supabase with optimized time-series data storage.
 | currency | VARCHAR(3) | DEFAULT 'USD' | Currency for monetary values |
 | metadata | JSONB | DEFAULT '{}' | Additional context |
 | created_at | TIMESTAMPTZ | DEFAULT NOW() | Record created |
+| updated_at | TIMESTAMPTZ | DEFAULT NOW(), NOT NULL | Last update; maintained by the metrics update trigger |
 
 **Metric Types:**
 - `revenue` - Total revenue
@@ -101,6 +102,10 @@ PostgreSQL database hosted on Supabase with optimized time-series data storage.
 - `idx_metrics_brand_date` on `(brand_id, date DESC)`
 - `idx_metrics_type_date` on `(metric_type, date DESC)`
 - `idx_metrics_created` on `created_at DESC`
+- `idx_metrics_brand_type_date` on `(brand_id, metric_type, date DESC)`
+
+**Unique Constraint:**
+- A unique constraint on `(brand_id, metric_type, date)`. Fresh databases created with migration `002` use `unique_brand_metric_type_date`; the verified existing Aura database uses `unique_brand_metric_date`.
 
 ---
 
@@ -122,11 +127,8 @@ PostgreSQL database hosted on Supabase with optimized time-series data storage.
 | expires_at | TIMESTAMPTZ | NULL | Insight expiration |
 
 **Insight Types:**
-- `high_cpa` - Cost per acquisition spike
-- `low_roas` - Low return on ad spend
-- `budget_recommendation` - Budget reallocation
-- `conversion_drop` - Conversion rate decrease
-- `high_performer` - Campaign performing well
+- Current rules engine: `revenue_drop`, `high_performer`, `order_drop`, `aov_opportunity`, `acquisition_drop`, and `weekly_summary`
+- Legacy accepted values: `high_cpa`, `low_roas`, `budget_recommendation`, and `conversion_drop`
 
 **Indexes:**
 - `idx_insights_brand_created` on `(brand_id, created_at DESC)`
@@ -136,6 +138,47 @@ PostgreSQL database hosted on Supabase with optimized time-series data storage.
 ---
 
 ## Relationships
+
+### Entity relationship diagram
+
+```mermaid
+erDiagram
+    USERS ||--o{ BRANDS : owns
+    BRANDS ||--o{ INTEGRATIONS : connects
+    BRANDS ||--o{ METRICS : records
+    INTEGRATIONS o|--o{ METRICS : sources
+    BRANDS ||--o{ INSIGHTS : receives
+
+    USERS {
+        UUID id PK
+    }
+
+    BRANDS {
+        UUID id PK
+        UUID user_id FK
+    }
+
+    INTEGRATIONS {
+        UUID id PK
+        UUID brand_id FK
+    }
+
+    METRICS {
+        UUID id PK
+        UUID brand_id FK
+        UUID integration_id FK
+    }
+
+    INSIGHTS {
+        UUID id PK
+        UUID brand_id FK
+    }
+```
+
+`PK` means primary key: the table's unique identity. `FK` means foreign key: a column that points to another table. `||--o{` means one parent can have zero or many children. `o|--o{` means a metric can optionally have one integration, while an integration can have many metrics.
+
+### Compact relationship view
+
 ```
 users (1) ──< brands (many)
 brands (1) ──< integrations (many)
@@ -144,16 +187,44 @@ brands (1) ──< insights (many)
 integrations (1) ──< metrics (many)
 ```
 
+### What happens when data is deleted?
+
+The database uses foreign-key rules to prevent data from being left behind
+without its parent record.
+
+| If this is deleted | What happens next |
+|---|---|
+| A user | Their brands are deleted. Those brands' integrations, metrics, and insights are deleted too. |
+| A brand | Its integrations, metrics, and insights are deleted too. |
+| An integration | Its metrics stay, but their `integration_id` becomes empty (`NULL`). |
+| A metric | Only that metric is deleted. |
+| An insight | Only that insight is deleted. |
+
+`CASCADE` means that deleting a parent automatically deletes its related child
+records. `SET NULL` means the child record stays, but its optional connection
+to the deleted record is removed.
+
+### Shopify disconnect is not deletion
+
+When a user disconnects Shopify, Aura does not delete the Shopify integration
+or its historical metrics. It changes the integration status to
+`disconnected`.
+
+Aura does not currently have an API endpoint for deleting a user or brand.
+Before adding one, we must require authentication, confirm brand ownership,
+warn the user that the deletion is permanent, and decide whether a recovery
+period is needed.
+
 ---
 
 ## Security
 
-1. **Encryption:** Supabase automatic encryption at rest
-2. **Token Encryption:** Using pgcrypto for OAuth tokens
-3. **Row Level Security (RLS):** Users can only access their own data
-4. **Password Hashing:** Bcrypt (handled in backend)
+1. **Encryption at rest:** Provided by Supabase infrastructure.
+2. **OAuth token encryption:** Not implemented by the tracked backend; access tokens are currently stored in the `integrations` table and require a separate security improvement.
+3. **Row Level Security (RLS):** RLS is enabled in the active Supabase database, with dashboard-created `auth.uid()` policies. Aura currently uses custom backend JWT authentication rather than Supabase Auth, so these policies are not Aura's active authorization mechanism. Read `docs/11_SUPABASE_RLS_REVIEW.md` before changing database access.
+4. **Password Hashing:** Bcrypt is handled in the backend.
 
 ---
 
-**Schema Version:** 1.0  
-**Last Updated:** 2025-02-09
+**Schema Version:** Migration series `001` + `002`
+**Last Updated:** 2026-07-26

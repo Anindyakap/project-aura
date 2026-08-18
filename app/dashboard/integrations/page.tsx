@@ -19,6 +19,8 @@ import {
 } from '@/lib/api';
 import { useSearchParams } from 'next/navigation';
 
+type ShopifyStatus = Awaited<ReturnType<typeof getShopifyStatus>>;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // This tiny component is the ONLY part that uses useSearchParams.
 // Isolating it here is what makes the Suspense boundary work correctly.
@@ -51,10 +53,7 @@ function IntegrationsContent() {
   // ── State ──────────────────────────────────────────────────────────────────
   const [brands, setBrands] = useState<Brand[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
-  const [shopifyStatus, setShopifyStatus] = useState<{
-    connected: boolean;
-    integration?: any;
-  } | null>(null);
+  const [shopifyStatus, setShopifyStatus] = useState<ShopifyStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isConnecting, setIsConnecting] = useState(false);
   const [shopInput, setShopInput] = useState('');
@@ -89,7 +88,7 @@ function IntegrationsContent() {
       const data = await getBrands();
       setBrands(data);
       if (data.length === 1) setSelectedBrand(data[0]);
-    } catch (error: any) {
+    } catch {
       showNotification('error', 'Failed to load brands');
     } finally {
       setIsLoading(false);
@@ -114,8 +113,9 @@ function IntegrationsContent() {
       setNewBrandName('');
       setShowBrandForm(false);
       showNotification('success', `Brand "${brand.name}" created!`);
-    } catch (error: any) {
-      showNotification('error', error.message);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to create brand';
+      showNotification('error', message);
     }
   };
 
@@ -141,8 +141,9 @@ function IntegrationsContent() {
       await disconnectShopify(selectedBrand.id);
       setShopifyStatus({ connected: false });
       showNotification('success', 'Shopify disconnected');
-    } catch (error: any) {
-      showNotification('error', error.message);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to disconnect Shopify';
+      showNotification('error', message);
     }
   };
 
