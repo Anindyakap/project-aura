@@ -116,7 +116,7 @@ The largest unfinished areas are:
 ## 12. Important technical risks to review
 
 - Test credentials must not be published.
-- Storing JWTs in localStorage creates a larger impact if an XSS vulnerability exists; secure cookies should be evaluated.
+- Aura now has a locally validated same-origin Next.js proxy design: browser JavaScript no longer receives the JWT, and Next.js stores it in an HTTP-only session cookie before forwarding protected requests to the backend. CSRF checks protect state-changing proxy requests. Migration `003_add_shopify_oauth_states.sql` was applied and verified in Supabase on August 19, 2026. Deployment verification remains open until the Vercel `BACKEND_API_URL` setting is configured and the production browser flow is tested.
 - OAuth access tokens should be encrypted at rest.
 - API versions and platform policies can change and should be rechecked before implementing the remaining integrations.
 - The current documentation must be compared with the actual repository because manual documents can become outdated.

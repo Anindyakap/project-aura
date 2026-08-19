@@ -6,6 +6,7 @@ Migrations are ordered SQL files. Run them by number so a new database reaches t
 
 1. `001_initial_schema.sql` creates a new Aura schema.
 2. `002_align_schema_with_backend.sql` adds the metric upsert support and current insight-type constraint.
+3. `003_add_shopify_oauth_states.sql` adds one-time, short-lived state storage for Shopify OAuth.
 
 Do not edit a migration after it has been applied to any shared environment. Create the next numbered file for a future schema change.
 
@@ -26,14 +27,16 @@ Do not edit a migration after it has been applied to any shared environment. Cre
 
 4. If it returns rows, stop. Do not delete or merge data until a duplicate-resolution plan is reviewed.
 5. If it returns no rows, copy the complete contents of `002_align_schema_with_backend.sql` into a new SQL Editor query and run it once.
-6. Run the verification queries below.
+6. Copy the complete contents of `003_add_shopify_oauth_states.sql` into a new SQL Editor query and run it once.
+7. Run the verification queries below.
 
 ### New empty database
 
 1. In Supabase, open **SQL Editor**.
 2. Run `001_initial_schema.sql` once.
 3. Run `002_align_schema_with_backend.sql` once.
-4. Run the verification queries below.
+4. Run `003_add_shopify_oauth_states.sql` once.
+5. Run the verification queries below.
 
 ## Verification queries
 
@@ -52,9 +55,13 @@ SELECT conname, pg_get_constraintdef(oid)
 FROM pg_constraint
 WHERE conrelid = 'insights'::regclass
   AND conname = 'insights_insight_type_check';
+
+SELECT relrowsecurity
+FROM pg_class
+WHERE oid = 'shopify_oauth_states'::regclass;
 ```
 
-The first query should show a non-null `updated_at` column with a `now()` default. The second should show the unique metric rule. The third should show the updated insight-type check.
+The first query should show a non-null `updated_at` column with a `now()` default. The second should show the unique metric rule. The third should show the updated insight-type check. The final query should return `true` for RLS on the OAuth-state table.
 
 ## Security rules
 

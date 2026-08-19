@@ -4,7 +4,12 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, getUser, getToken, removeToken, getCurrentUser } from '@/lib/api';
+import {
+  User,
+  clearLegacyClientAuth,
+  getCurrentUser,
+  logoutUser,
+} from '@/lib/api';
 
 // ============================================
 // TYPES
@@ -14,7 +19,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   setUser: (user: User | null) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
@@ -33,18 +38,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Check auth state on mount
   useEffect(() => {
     const initAuth = async () => {
-      const token = getToken();
+      clearLegacyClientAuth();
 
-      if (token) {
-        try {
-          // Verify token is still valid
-          const currentUser = await getCurrentUser();
-          setUser(currentUser);
-        } catch (error) {
-          // Token is invalid/expired
-          removeToken();
-          setUser(null);
-        }
+      try {
+        const currentUser = await getCurrentUser();
+        setUser(currentUser);
+      } catch {
+        setUser(null);
       }
 
       setIsLoading(false);
@@ -54,10 +54,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Logout function
-  const logout = () => {
-    removeToken();
-    setUser(null);
-    window.location.href = '/auth/login';
+  const logout = async (): Promise<void> => {
+    try {
+      await logoutUser();
+    } finally {
+      setUser(null);
+      window.location.href = '/auth/login';
+    }
   };
 
   // Refresh user data
@@ -65,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const currentUser = await getCurrentUser();
       setUser(currentUser);
-    } catch (error) {
+    } catch {
       logout();
     }
   };

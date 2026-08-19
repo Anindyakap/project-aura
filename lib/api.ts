@@ -1,7 +1,9 @@
 // lib/api.ts
 // API client for communicating with backend
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+import { CSRF_HEADER_NAME, getCsrfToken } from '@/lib/auth/csrf';
+
+const API_URL = '/api/v1';
 
 // ============================================
 // TYPES
@@ -20,7 +22,6 @@ export interface AuthResponse {
   message: string;
   data: {
     user: User;
-    token: string;
   };
 }
 
@@ -30,31 +31,14 @@ export interface ApiError {
 }
 
 // ============================================
-// TOKEN MANAGEMENT
+// LEGACY TOKEN CLEANUP
 // ============================================
 
-export const getToken = (): string | null => {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('aura_token');
-};
+export const clearLegacyClientAuth = (): void => {
+  if (typeof window === 'undefined') return;
 
-export const setToken = (token: string): void => {
-  localStorage.setItem('aura_token', token);
-};
-
-export const removeToken = (): void => {
   localStorage.removeItem('aura_token');
   localStorage.removeItem('aura_user');
-};
-
-export const getUser = (): User | null => {
-  if (typeof window === 'undefined') return null;
-  const user = localStorage.getItem('aura_user');
-  return user ? JSON.parse(user) : null;
-};
-
-export const setUser = (user: User): void => {
-  localStorage.setItem('aura_user', JSON.stringify(user));
 };
 
 // ============================================
@@ -66,21 +50,23 @@ const apiFetch = async (
   endpoint: string,
   options: RequestInit = {}
 ): Promise<Response> => {
-  const token = getToken();
-
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
   };
 
-  // Add auth token if available
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(options.method || 'GET')) {
+    const csrfToken = getCsrfToken();
+
+    if (csrfToken) {
+      headers[CSRF_HEADER_NAME] = csrfToken;
+    }
   }
 
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
+    credentials: 'same-origin',
   });
 
   return response;
@@ -107,10 +93,6 @@ export const registerUser = async (
     throw new Error(data.message || 'Registration failed');
   }
 
-  // Save token and user
-  setToken(data.data.token);
-  setUser(data.data.user);
-
   return data;
 };
 
@@ -130,10 +112,6 @@ export const loginUser = async (
     throw new Error(data.message || 'Login failed');
   }
 
-  // Save token and user
-  setToken(data.data.token);
-  setUser(data.data.user);
-
   return data;
 };
 
@@ -150,13 +128,17 @@ export const getCurrentUser = async (): Promise<User> => {
 };
 
 // Logout
-export const logoutUser = (): void => {
-  removeToken();
-};
+export const logoutUser = async (): Promise<void> => {
+  const response = await apiFetch('/auth/logout', {
+    method: 'POST',
+  });
 
-// Check if user is logged in
-export const isAuthenticated = (): boolean => {
-  return !!getToken();
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.message || 'Logout failed');
+  }
+
+  clearLegacyClientAuth();
 };
 
 // ============================================
@@ -228,16 +210,22 @@ export const getShopifyStatus = async (brandId: string): Promise<{
   return data.data;
 };
 
-// Get the Shopify connect URL (redirects to Shopify OAuth)
-// We build this URL and redirect the browser to it
-export const getShopifyConnectUrl = (
-  shop: string,    // e.g. mystore.myshopify.com
+// Start Shopify OAuth without exposing the Aura session token to browser code.
+export const startShopifyConnect = async (
+  shop: string,
   brandId: string
-): string => {
-  const token = getToken();
-  // We pass the token as a query param because this is a browser redirect
-  // The backend will read it before redirecting to Shopify
-  return `${API_URL}/integrations/shopify/connect?shop=${shop}&brandId=${brandId}&token=${token}`;
+): Promise<string> => {
+  const response = await apiFetch('/integrations/shopify/connect', {
+    method: 'POST',
+    body: JSON.stringify({ shop, brandId }),
+  });
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to start Shopify connection');
+  }
+
+  return data.data.authorizationUrl;
 };
 
 // Disconnect Shopify

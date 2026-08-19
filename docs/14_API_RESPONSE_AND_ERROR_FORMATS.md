@@ -101,17 +101,17 @@ endpoint specification.
 
 | Endpoint | Status | Response fields |
 | --- | --- | --- |
-| `POST /api/v1/auth/register` | `201` | `success`, `message`, `data.user`, `data.token` |
-| `POST /api/v1/auth/login` | `200` | `success`, `message`, `data.user`, `data.token` |
+| `POST /api/v1/auth/register` | `201` | Browser proxy: `success`, `message`, `data.user`; backend response additionally contains `data.token`, which Next.js stores in an HTTP-only cookie and does not return to browser JavaScript. |
+| `POST /api/v1/auth/login` | `200` | Browser proxy: `success`, `message`, `data.user`; backend response additionally contains `data.token`, which Next.js stores in an HTTP-only cookie and does not return to browser JavaScript. |
 | `GET /api/v1/auth/me` | `200` | `success`, `data` |
 
 `data.user` and the `/auth/me` `data` object contain `id`, `email`, `name`,
 `created_at`, and `is_active`. They do not contain `password_hash` or
 `updated_at`.
 
-`data.token` is a JWT credential. Treat it like a password: store it only as
-required by the current frontend, never place a real token in documentation,
-logs, screenshots, or committed test files.
+`data.token` is a JWT credential. The Next.js proxy stores it in an HTTP-only
+cookie, so browser JavaScript must not receive it. Never place a real token in
+documentation, logs, screenshots, or committed test files.
 
 ## Brand responses
 

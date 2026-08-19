@@ -5,6 +5,10 @@ import axios from 'axios';
 import { pool } from '../config/database';
 import { AppError, catchAsync } from '../middleware/errorHandler';
 import { logError, logInfo } from '../utils/logger';
+import {
+  consumeShopifyOAuthState,
+  createShopifyOAuthState,
+} from '../services/shopifyOAuthState.service';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 const CLIENT_ID = process.env.SHOPIFY_CLIENT_ID!;
@@ -16,12 +20,14 @@ const FRONTEND_URL = process.env.FRONTEND_URL!;
 const SCOPES = 'read_orders,read_products,read_analytics,read_all_orders';
 
 // ─── CONNECT ─────────────────────────────────────────────────────────────────
-// GET /api/v1/integrations/shopify/connect?shop=xxx.myshopify.com&brandId=xxx
-// Protected: requires JWT. Redirects user to Shopify OAuth screen.
+// POST /api/v1/integrations/shopify/connect
+// Protected: requires JWT. Returns a Shopify OAuth URL.
 export const connectShopify = catchAsync(
   async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
-    const shop = req.query.shop as string;
-    const brandId = req.query.brandId as string;
+    const { shop, brandId } = req.body as {
+      shop: string;
+      brandId: string;
+    };
 
     // Validate shop format
     if (!shop || !shop.endsWith('.myshopify.com')) {
@@ -43,18 +49,11 @@ export const connectShopify = catchAsync(
       throw new AppError('Brand not found or access denied', 403);
     }
 
-    // Encode brandId inside state so we can retrieve it on callback
-    // state = randomNonce:brandId  (colon-separated)
-    const nonce = crypto.randomBytes(16).toString('hex');
-    const state = `${nonce}:${brandId}`;
-
-    // Store state in a short-lived cookie for CSRF protection
-    res.cookie('shopify_oauth_state', state, {
-      httpOnly: true,
-      maxAge: 10 * 60 * 1000, // 10 minutes
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-    });
+    const state = await createShopifyOAuthState(
+      req.user!.userId,
+      brandId,
+      shop
+    );
 
     // Build Shopify's OAuth approval URL
     const authUrl =
@@ -64,7 +63,12 @@ export const connectShopify = catchAsync(
       `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
       `&state=${encodeURIComponent(state)}`;
 
-    res.redirect(authUrl);
+    res.status(200).json({
+      success: true,
+      data: {
+        authorizationUrl: authUrl,
+      },
+    });
   }
 );
 
@@ -78,16 +82,8 @@ export const shopifyCallback = async (
 ): Promise<void> => {
   const { shop, code, state, hmac } = req.query as Record<string, string>;
 
-  // 1. Verify state matches cookie (CSRF protection)
-  const savedState = req.cookies?.shopify_oauth_state;
-  if (!state || !savedState || state !== savedState) {
+  if (!state) {
     return res.redirect(`${FRONTEND_URL}/dashboard?shopify=error&reason=state_mismatch`);
-  }
-
-  // 2. Extract brandId from state (format: "nonce:brandId")
-  const brandId = state.split(':')[1];
-  if (!brandId) {
-    return res.redirect(`${FRONTEND_URL}/dashboard?shopify=error&reason=missing_brand`);
   }
 
   // 3. Verify HMAC signature — proves this request genuinely came from Shopify
@@ -107,7 +103,14 @@ export const shopifyCallback = async (
   }
 
   try {
-    // 4. Exchange temporary code for a permanent access token
+    const storedState = await consumeShopifyOAuthState(state);
+    if (!storedState || storedState.shopDomain !== shop) {
+      return res.redirect(`${FRONTEND_URL}/dashboard?shopify=error&reason=state_mismatch`);
+    }
+
+    const brandId = storedState.brandId;
+
+    // Exchange temporary code for a permanent access token.
     const tokenRes = await axios.post(
       `https://${shop}/admin/oauth/access_token`,
       {

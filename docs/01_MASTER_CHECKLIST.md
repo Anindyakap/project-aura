@@ -80,7 +80,14 @@
 - [x] Persist the token across refreshes.
 - [x] Redirect unauthenticated users to login.
 - [x] Remove any test credentials from public documentation.
-- [ ] Decide whether localStorage remains acceptable or migrate to secure HTTP-only cookies.
+- [x] Decide token storage: retain localStorage temporarily and plan an HTTP-only-cookie migration after Aura has a same-site frontend/API architecture.
+- [ ] Complete the HTTP-only-cookie migration: local implementation passes checks; Supabase migration, deployment configuration, and browser verification remain.
+  - [x] Add a same-origin Next.js API proxy, HTTP-only session cookie, and CSRF checks.
+  - [x] Remove browser JWT storage and Shopify JWT query parameters.
+  - [x] Add repeatable server-side Shopify OAuth state storage and backend tests.
+  - [x] Apply and verify migration `003_add_shopify_oauth_states.sql` in Supabase.
+  - [x] Configure `BACKEND_API_URL` in Vercel.
+  - [ ] Verify deployed login, refresh, logout, protected requests, and Shopify OAuth.
 - [ ] Add token expiry and logout behavior tests.
 - [ ] Add password-policy validation.
 - [ ] Add forgot-password and reset-password flows.

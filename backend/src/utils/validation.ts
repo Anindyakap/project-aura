@@ -73,14 +73,13 @@ export const insightIdParamSchema = z.object({
 });
 
 export const shopifyConnectSchema = z.object({
-  query: z.object({
+  body: z.object({
     shop: z.string()
       .regex(
         /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/,
         'Shop must be a valid .myshopify.com domain'
       ),
     brandId: uuidSchema,
-    token: z.string().min(1).max(4096).optional(),
   }).strict(),
 });
 

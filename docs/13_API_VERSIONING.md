@@ -26,7 +26,7 @@ unversioned.
 
 ## Frontend and backend configuration
 
-The frontend sends requests to `NEXT_PUBLIC_API_URL`. Its value must include
+Next.js route handlers send backend requests to `BACKEND_API_URL`. Its value must include
 the same version prefix that the backend serves.
 
 For local development, the matching values are:
@@ -36,7 +36,7 @@ For local development, the matching values are:
 API_VERSION=v1
 
 # .env.local
-NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1
+BACKEND_API_URL=http://localhost:4000/api/v1
 ```
 
 If these values do not match, the frontend will request routes that the

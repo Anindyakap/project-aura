@@ -137,6 +137,22 @@ PostgreSQL database hosted on Supabase with optimized time-series data storage.
 
 ---
 
+### 6. shopify_oauth_states
+**Purpose:** Store one-time, short-lived Shopify OAuth state records for the backend.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| state_hash | CHAR(64) | PRIMARY KEY | SHA-256 hash of the browser-visible state value |
+| user_id | UUID | FOREIGN KEY → users(id) ON DELETE CASCADE | User who started the connection |
+| brand_id | UUID | FOREIGN KEY → brands(id) ON DELETE CASCADE | Brand being connected |
+| shop_domain | VARCHAR(255) | NOT NULL | Shopify shop expected on callback |
+| expires_at | TIMESTAMPTZ | NOT NULL | Ten-minute state expiration |
+| created_at | TIMESTAMPTZ | DEFAULT NOW() | Record creation time |
+
+The callback deletes a matching, unexpired row before it exchanges the Shopify code. This makes a state value single-use without storing the raw state in the database.
+
+---
+
 ## Relationships
 
 ### Entity relationship diagram

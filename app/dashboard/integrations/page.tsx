@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import {
   getBrands, createBrand, getShopifyStatus,
-  getShopifyConnectUrl, disconnectShopify,
+  startShopifyConnect, disconnectShopify,
   Brand
 } from '@/lib/api';
 import { useSearchParams } from 'next/navigation';
@@ -119,7 +119,7 @@ function IntegrationsContent() {
     }
   };
 
-  const handleConnectShopify = () => {
+  const handleConnectShopify = async () => {
     if (!selectedBrand) return;
 
     let shop = shopInput.trim().toLowerCase();
@@ -130,9 +130,15 @@ function IntegrationsContent() {
       return;
     }
 
-    setIsConnecting(true);
-    const connectUrl = getShopifyConnectUrl(shop, selectedBrand.id);
-    window.location.href = connectUrl;
+    try {
+      setIsConnecting(true);
+      const connectUrl = await startShopifyConnect(shop, selectedBrand.id);
+      window.location.assign(connectUrl);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to start Shopify connection';
+      showNotification('error', message);
+      setIsConnecting(false);
+    }
   };
 
   const handleDisconnectShopify = async () => {

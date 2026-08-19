@@ -10,7 +10,7 @@
 
 Environment variables provide deployment-specific configuration without placing private values in source code. Git ignore rules prevent new matching files from being added, but they do not remove files or values already committed. Aura's reachable Git history contains an expired JWT-shaped test token and an earlier JWT-secret fallback. The current API test file no longer contains the token, the backend now refuses to start without a non-blank `JWT_SECRET`, and the deployed JWT secret was rotated and verified through a new production login. A private Git bundle backup was verified before cleanup. Coordinated Git-history remediation remains unchecked work. Keep values for `JWT_SECRET`, database URLs, OAuth secrets, and temporary JWT tokens in deployment settings or uncommitted local files rather than Git.
 
-The root `.env.example` file documents the public `NEXT_PUBLIC_API_URL` used by the frontend. `backend/.env.example` documents the backend values it reads, including `DATABASE_URL`, `JWT_SECRET`, and Shopify OAuth configuration. Copy a template to the matching local environment file, then replace only its placeholder values. Never copy a real secret into either example file.
+The root `.env.example` file documents the server-only `BACKEND_API_URL` used by Next.js route handlers. `backend/.env.example` documents the backend values it reads, including `DATABASE_URL`, `JWT_SECRET`, and Shopify OAuth configuration. Copy a template to the matching local environment file, then replace only its placeholder values. Never copy a real secret into either example file.
 
 Aura bundles its Inter variable font in `app/fonts/` and loads it through `next/font/local` in `app/layout.tsx`. This avoids a Google Fonts download during production builds. `LICENSE-Inter.txt` is stored beside the font asset.
 
@@ -30,7 +30,7 @@ The database relationship diagram in `docs/database-schema.md` shows each primar
 The same schema guide explains cascade and `SET NULL` deletion behavior. Read it before adding a user, brand, or integration deletion endpoint.
 Read `docs/11_SUPABASE_RLS_REVIEW.md` before changing authentication, Supabase access, or database roles. Aura's current custom-JWT backend does not use Supabase Auth, so its dashboard-created `auth.uid()` policies are not the active authorization mechanism.
 Read `docs/12_DATABASE_BACKUP_AND_RESTORE.md` before schema work or any attempt to restore Aura's database. Backup files are confidential and must stay outside the repository.
-Read `docs/13_API_VERSIONING.md` before changing `API_VERSION`, API route paths, or the frontend API URL. Aura currently serves one route-contract version at a time: the backend's `API_VERSION` and the frontend's `NEXT_PUBLIC_API_URL` must both use the same prefix, currently `/api/v1`.
+Read `docs/13_API_VERSIONING.md` before changing `API_VERSION`, API route paths, or the frontend backend URL. Aura currently serves one route-contract version at a time: the backend's `API_VERSION` and Vercel's server-only `BACKEND_API_URL` must both use the same prefix, currently `/api/v1`.
 `backend/src/middleware/validate.ts` runs Zod schemas at API boundaries before controllers access request bodies, query strings, or route parameters. The schemas in `backend/src/utils/validation.ts` validate external shapes such as UUIDs, metric names, chart days, brand fields, and Shopify connection input. Validation rejects malformed input with a 400 response; it does not replace authentication or ownership checks.
 `backend/src/middleware/rateLimit.ts` protects the public registration and login routes from repeated attempts. It permits ten combined attempts per IP address in 15 minutes, then returns HTTP 429. `server.ts` trusts one proxy hop so Render-proxied requests are limited by visitor IP rather than all sharing the proxy IP. The initial limiter stores counters only in the current backend process, so a multi-instance deployment will require a shared store.
 Read `docs/14_API_RESPONSE_AND_ERROR_FORMATS.md` before changing a controller response, error handler, rate-limit handler, or OAuth redirect. It records the current API contract and its intentional exceptions, including the distinct 404 JSON shape and redirect-based Shopify OAuth behavior.
@@ -236,7 +236,7 @@ Structure of a JWT:
                              expiry: tomorrow"       signed with secret"
 ```
 
-### flexibleAuth (variant)
+### Historical flexibleAuth (removed)
 ```
 Normal protect: reads token from Authorization HEADER
 Problem: Browser redirects can't send custom headers!
@@ -817,6 +817,8 @@ User clicks the moon/sun button in sidebar:
 
 ## `contexts/AuthContext.tsx` — Global Login State
 
+> Historical note: the localStorage diagram in this older section describes the pre-proxy implementation. The current HTTP-only-cookie flow is documented in "Current token-storage design" below.
+
 ### What it is
 Stores "who is logged in" and shares it across the entire app.
 
@@ -956,7 +958,13 @@ WITH api.ts (clean):
     Consistent error handling
 ```
 
-### The apiFetch base function
+### Current token-storage design
+
+Aura now uses a same-origin Next.js proxy. Browser JavaScript calls `/api/v1`, while the Next.js server reads the HTTP-only `aura_session` cookie and adds the `Authorization: Bearer` header only when it forwards a request to the Render backend.
+
+State-changing proxy requests require both a matching CSRF cookie/header and a same-origin request. The cookie migration is not deployed until `BACKEND_API_URL` and database migration 003 are configured and browser-tested.
+
+### Historical apiFetch base function (replaced)
 ```
 apiFetch(endpoint, options)
       │
@@ -981,7 +989,7 @@ Return the Response object
 Caller does: const data = await response.json()
 ```
 
-### Key API functions
+### Historical API functions (replaced)
 ```
 loginUser(email, password)
   → POST /auth/login
@@ -1168,6 +1176,12 @@ Dashboard is fully loaded ✓
 | ThemeContext | Global theme state | Consistent dark mode everywhere |
 
 ---
+
+## `app/dashboard/layout.tsx` — Protected Dashboard Route Guard
+
+This client layout runs before Aura renders any dashboard page. It waits for `AuthContext` to finish checking the HTTP-only session cookie. If there is no authenticated user, it uses `router.replace('/auth/login')` to redirect before dashboard pages can start protected data requests.
+
+`children: React.ReactNode` represents whichever dashboard page is nested inside the layout. When a user is authenticated, the layout returns those children unchanged.
 
 # How to keep this guide accurate
 
