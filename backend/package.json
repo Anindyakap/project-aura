@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon src/server.ts",
-    "build": "npm install && tsc",
+    "build": "tsc --project tsconfig.build.json",
     "start": "node dist/server.js",
     "test": "vitest run"
   },
