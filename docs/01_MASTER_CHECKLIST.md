@@ -89,7 +89,7 @@
   - [x] Configure `BACKEND_API_URL` in Vercel.
   - [x] Verify deployed login, refresh, logout, protected requests, and Shopify OAuth.
 - [x] Add token expiry and logout behavior tests.
-- [ ] Add password-policy validation.
+- [x] Add password-policy validation.
 - [ ] Add forgot-password and reset-password flows.
 - [ ] Add account lockout or abuse protection.
 

@@ -135,7 +135,7 @@ The frontend bundles the Inter variable font in `app/fonts/` and loads it with N
 
 ## 16. Backend automated-test foundation
 
-The backend uses Vitest 3.2.7, selected because it supports the backend's declared Node 18+ runtime. `npm test` runs the test suite once. It covers validation, configuration, request IDs, rate limits, one-time Shopify OAuth state, JWT expiry, and protected-route rejection of expired tokens. These tests use only fake in-memory input and do not connect to the database. The root project also uses Vitest: `npm run test` verifies the Next.js logout route's CSRF behavior and cookie deletion using mocked browser/Next.js dependencies.
+The backend uses Vitest 3.2.7, selected because it supports the backend's declared Node 18+ runtime. `npm test` runs the test suite once. It covers validation, password-policy rules, configuration, request IDs, rate limits, one-time Shopify OAuth state, JWT expiry, and protected-route rejection of expired tokens. These tests use only fake in-memory input and do not connect to the database. The root project also uses Vitest: `npm run test` verifies the Next.js logout route's CSRF behavior and cookie deletion using mocked browser/Next.js dependencies.
 
 ## 17. Environment-variable reference
 

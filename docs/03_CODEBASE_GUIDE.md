@@ -14,7 +14,7 @@ The root `.env.example` file documents the server-only `BACKEND_API_URL` used by
 
 Aura bundles its Inter variable font in `app/fonts/` and loads it through `next/font/local` in `app/layout.tsx`. This avoids a Google Fonts download during production builds. `LICENSE-Inter.txt` is stored beside the font asset.
 
-The backend uses Vitest 3.2.7 for automated tests. Run `npm test` from `backend/` to execute validation, configuration, request-ID, rate-limit, Shopify OAuth state, and JWT-expiry tests. Run `npm run test` from the repository root to test the Next.js logout route and session-cookie clearing. These tests use fake inputs and mocked Next.js dependencies, so they do not start the API server or access the database.
+The backend uses Vitest 3.2.7 for automated tests. Run `npm test` from `backend/` to execute validation, password-policy, configuration, request-ID, rate-limit, Shopify OAuth state, and JWT-expiry tests. Run `npm run test` from the repository root to test the Next.js logout route and session-cookie clearing. These tests use fake inputs and mocked Next.js dependencies, so they do not start the API server or access the database.
 
 For the complete names-only environment-variable reference, read `docs/09_ENVIRONMENT_VARIABLES.md`. It distinguishes browser-visible `NEXT_PUBLIC_` values from backend secrets and shows which deployment platform supplies each setting.
 

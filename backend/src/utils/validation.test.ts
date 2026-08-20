@@ -8,6 +8,15 @@ import {
   uuidSchema,
 } from './validation';
 
+const parseRegistrationPassword = (password: string) => {
+  return registerSchema.safeParse({
+    body: {
+      email: 'ada@example.com',
+      password,
+    },
+  });
+};
+
 describe('registration validation', () => {
   it('accepts valid registration input', () => {
     const result = registerSchema.safeParse({
@@ -22,14 +31,25 @@ describe('registration validation', () => {
   });
 
   it('rejects a password without an uppercase letter', () => {
-    const result = registerSchema.safeParse({
-      body: {
-        email: 'ada@example.com',
-        password: 'password123',
-      },
-    });
+    expect(parseRegistrationPassword('password123').success).toBe(false);
+  });
 
-    expect(result.success).toBe(false);
+  it('rejects a password that is too short', () => {
+    expect(parseRegistrationPassword('Pass1').success).toBe(false);
+  });
+
+  it('rejects a password that is too long', () => {
+    const password = `${'A'.repeat(99)}a1`;
+
+    expect(parseRegistrationPassword(password).success).toBe(false);
+  });
+
+  it('rejects a password without a lowercase letter', () => {
+    expect(parseRegistrationPassword('PASSWORD123').success).toBe(false);
+  });
+
+  it('rejects a password without a number', () => {
+    expect(parseRegistrationPassword('PasswordOnly').success).toBe(false);
   });
 
   it('rejects an invalid email address', () => {
