@@ -88,7 +88,7 @@
   - [x] Apply and verify migration `003_add_shopify_oauth_states.sql` in Supabase.
   - [x] Configure `BACKEND_API_URL` in Vercel.
   - [x] Verify deployed login, refresh, logout, protected requests, and Shopify OAuth.
-- [ ] Add token expiry and logout behavior tests.
+- [x] Add token expiry and logout behavior tests.
 - [ ] Add password-policy validation.
 - [ ] Add forgot-password and reset-password flows.
 - [ ] Add account lockout or abuse protection.
