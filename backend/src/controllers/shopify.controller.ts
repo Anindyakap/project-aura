@@ -17,7 +17,7 @@ const REDIRECT_URI = process.env.SHOPIFY_REDIRECT_URI!;
 const FRONTEND_URL = process.env.FRONTEND_URL!;
 
 // Permissions we need from the merchant's Shopify store
-const SCOPES = 'read_orders,read_products,read_analytics,read_all_orders';
+const SCOPES = 'read_orders,read_products,read_analytics';
 
 // ─── CONNECT ─────────────────────────────────────────────────────────────────
 // POST /api/v1/integrations/shopify/connect
