@@ -2,7 +2,8 @@
 
 ## Setup
 
-- [ ] Create a Resend account, verify an Aura-owned sending domain, and create a restricted server-side API key.
+- [x] Create a Resend testing account and restricted server-side API key for development.
+- [ ] Verify an Aura-owned sender domain before allowing real customer password-reset emails.
 - [ ] Add server-only email environment variables and templates.
 
 ## Schema
