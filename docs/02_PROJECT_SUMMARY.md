@@ -14,6 +14,8 @@ Aura uses three main layers:
 2. **Backend:** Node.js, Express, and TypeScript, deployed on Render.
 3. **Database:** PostgreSQL hosted by Supabase.
 
+Aura is preparing a controlled migration of the frontend and backend from Vercel and Render to Coolify. Until production cutover is verified, Vercel and Render remain the live services. The backend now uses an explicit scheduler setting so exactly one deployed backend runs the daily Shopify sync.
+
 The normal request flow is:
 
 ```text

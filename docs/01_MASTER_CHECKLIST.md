@@ -11,6 +11,7 @@
 - [x] Create the GitHub repository for Project Aura.
 - [x] Connect the frontend repository to Vercel.
 - [x] Connect the backend deployment to Render.
+- [ ] Migrate the frontend and backend production hosting from Vercel/Render to Coolify. See `17_COOLIFY_PRODUCTION_MIGRATION_CHECKLIST.md`.
 - [x] Create the Supabase PostgreSQL database.
 - [ ] Verify that no secrets are committed to Git history.
   - [x] Remove the JWT-secret code fallback and require `JWT_SECRET` at backend startup.

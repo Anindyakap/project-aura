@@ -14,6 +14,7 @@ import cookieParser from 'cookie-parser';
 import shopifyRoutes from './routes/shopify.routes';
 import brandsRoutes from './routes/brands.routes';
 import { registerSyncJobs } from './jobs/sync.jobs';
+import { getScheduledJobsEnabled } from './config/scheduledJobs';
 import syncRoutes from './routes/sync.routes';
 import metricsRoutes from './routes/metrics.routes';
 import insightsRoutes from './routes/insights.routes';
@@ -121,8 +122,11 @@ app.listen(PORT, '0.0.0.0', () => {
     apiVersion: API_VERSION,
   });
 
-  // Register scheduled jobs (e.g., daily sync)
-  registerSyncJobs();
+  if (getScheduledJobsEnabled(process.env.SCHEDULED_JOBS_ENABLED)) {
+    registerSyncJobs();
+  } else {
+    logInfo('Scheduled jobs are disabled by configuration');
+  }
 
   // Connect to DB after server starts
   connectDatabase();

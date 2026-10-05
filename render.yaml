@@ -21,5 +21,8 @@ services:
         sync: false
       - key: API_VERSION
         value: v1
+      # Render remains the only scheduler until Coolify cutover is verified.
+      - key: SCHEDULED_JOBS_ENABLED
+        value: true
     healthCheckPath: /health
     autoDeploy: true
