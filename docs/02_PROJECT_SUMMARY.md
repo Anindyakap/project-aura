@@ -15,6 +15,8 @@ Aura uses three main layers:
 3. **Database:** PostgreSQL hosted by Supabase.
 
 Aura is preparing a controlled migration of the frontend and backend from Vercel and Render to Coolify. Until production cutover is verified, Vercel and Render remain the live services. The backend now uses an explicit scheduler setting so exactly one deployed backend runs the daily Shopify sync.
+The Coolify backend shadow deployment is running, connects to Supabase, and has scheduled jobs explicitly disabled. Render remains the scheduler owner while the frontend migration is prepared.
+Aura's same-origin checks also recognize a trusted reverse proxy's forwarded HTTPS protocol. This preserves CSRF protection when Cloudflare and Coolify forward a public HTTPS request to the Next.js server over an internal HTTP connection.
 
 The normal request flow is:
 

@@ -5,7 +5,16 @@ import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME } from '../auth/csrf';
 
 const isSameOriginRequest = (request: Request): boolean => {
   const origin = request.headers.get('origin');
-  const requestOrigin = new URL(request.url).origin;
+  const requestUrl = new URL(request.url);
+  const forwardedProtocol = request.headers
+    .get('x-forwarded-proto')
+    ?.split(',')[0]
+    ?.trim();
+  const protocol =
+    forwardedProtocol === 'http' || forwardedProtocol === 'https'
+      ? forwardedProtocol
+      : requestUrl.protocol.replace(':', '');
+  const requestOrigin = `${protocol}://${requestUrl.host}`;
   const fetchSite = request.headers.get('sec-fetch-site');
 
   return origin === requestOrigin && (!fetchSite || fetchSite === 'same-origin');

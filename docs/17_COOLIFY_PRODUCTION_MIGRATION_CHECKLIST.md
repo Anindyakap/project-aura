@@ -9,7 +9,7 @@
 ## Backend
 
 - [x] Add a validated `SCHEDULED_JOBS_ENABLED` setting with a disabled-by-default value.
-- [ ] Deploy the Coolify backend with scheduled jobs disabled and verify `/health`.
+- [x] Deploy the Coolify backend with scheduled jobs disabled and verify `/health`.
 
 ## Frontend
 
@@ -19,6 +19,7 @@
 ## Security
 
 - [ ] Add production secrets only through Coolify environment variables.
+- [x] Preserve strict same-origin checks behind Cloudflare and Coolify using the forwarded HTTPS protocol.
 - [ ] Verify HTTPS for `aura.anindya.nl` and `api.anindya.nl`.
 - [ ] Keep `RESEND_API_KEY` server-only.
 
