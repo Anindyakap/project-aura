@@ -14,6 +14,7 @@ This document records variable names only. Do not put real passwords, tokens, co
 | Name | Used by code | Public or secret | Development | Preview | Production | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
 | `BACKEND_API_URL` | Yes, Next.js server proxy | Secret server configuration | `.env.local` | Vercel project setting | Vercel project setting | Full backend API base URL, such as `http://localhost:4000/api/v1`. Do not use `NEXT_PUBLIC_`; browser JavaScript must not receive it. |
+| `AURA_PUBLIC_ORIGIN` | Yes, Next.js same-origin/CSRF checks when set | Public address, server-only setting | Usually unset | Usually unset | Coolify frontend runtime: `https://aura.anindya.nl` | Exact HTTPS origin only: protocol and hostname, no path or trailing slash. Use it when a reverse proxy gives Next.js an internal request host. Invalid values reject requests. Do not use `NEXT_PUBLIC_`. |
 | `NEXT_PUBLIC_APP_NAME` | No current source reference | Public | Not needed | Not needed | Present in root `.env.production` | Reserved configuration; it currently has no effect. |
 | `NEXT_PUBLIC_APP_DESCRIPTION` | No current source reference | Public | Not needed | Not needed | Present in root `.env.production` | Reserved configuration; it currently has no effect. |
 | `FRONTEND_URL` (root file) | No current frontend source reference | Public URL, but not a `NEXT_PUBLIC_` variable | Not needed | Not needed | Present in root `.env.production` | This root-file name currently has no frontend effect. It is distinct from the backend `FRONTEND_URL` setting below. |
@@ -48,4 +49,4 @@ There is no checked-in Vercel configuration file. The repository can confirm the
 1. Copy `.env.example` to `.env.local` for frontend development, or copy `backend/.env.example` to `backend/.env` for backend development.
 2. Replace only local placeholders; never paste a real production secret into an example file.
 3. Run the frontend and backend locally.
-4. If the browser cannot call the backend, check that frontend `BACKEND_API_URL` points to the backend API and that backend `FRONTEND_URL` points to the frontend origin.
+4. If the browser cannot call the backend, check that frontend `BACKEND_API_URL` points to the backend API and that backend `FRONTEND_URL` points to the frontend origin. If Coolify login returns `Invalid request origin`, also check the frontend runtime value of `AURA_PUBLIC_ORIGIN`; do not disable CSRF protection.

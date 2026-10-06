@@ -19,7 +19,8 @@
 ## Security
 
 - [ ] Add production secrets only through Coolify environment variables.
-- [x] Preserve strict same-origin checks behind Cloudflare and Coolify using the forwarded HTTPS protocol.
+- [x] Preserve strict same-origin checks behind Cloudflare and Coolify, with a server-only public origin when the forwarded request host is internal.
+- [ ] Set `AURA_PUBLIC_ORIGIN=https://aura.anindya.nl` on the Coolify frontend runtime and verify login and state-changing requests in the browser.
 - [ ] Verify HTTPS for `aura.anindya.nl` and `api.anindya.nl`.
 - [ ] Keep `RESEND_API_KEY` server-only.
 
